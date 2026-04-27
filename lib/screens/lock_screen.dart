@@ -1,14 +1,16 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme.dart';
 import '../providers.dart';
+import '../data/auth_service.dart';
 import 'home_screen.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
@@ -20,6 +22,7 @@ class LockScreen extends ConsumerStatefulWidget {
 
 class _LockScreenState extends ConsumerState<LockScreen> {
   final LocalAuthentication _auth = LocalAuthentication();
+  final FlutterSecureStorage _secure = const FlutterSecureStorage();
   bool _busy = false;
   String? _error;
 
@@ -42,7 +45,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             stickyAuth: true,
           ),
         );
-      } else {
+      }
+      if (!ok) {
         ok = await _showPinFallback();
       }
     } on PlatformException {
@@ -62,17 +66,16 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     }
   }
 
-  String _hashPin(String pin, String uid) {
-    final bytes = utf8.encode(uid + pin);
+  String _hashPin(String pin, String salt) {
+    final bytes = utf8.encode(salt + pin);
     return sha256.convert(bytes).toString();
   }
 
   Future<bool> _showPinFallback() async {
-    // Ensure we have a user id (anonymous sign-in if needed)
-    final uid = await ref.read(authServiceProvider).signInAnonymouslyIfNeeded();
-    final docRef = FirebaseFirestore.instance.collection('users').doc(uid);
-    final snapshot = await docRef.get();
-    final storedHash = snapshot.data()?['pinHash'] as String?;
+    final auth = ref.read(authServiceProvider);
+    final uid = auth.userId; // may be null if not signed-in
+    final key = 'pinHash_${uid ?? 'device'}';
+    final storedHash = await _secure.read(key: key);
 
     if (storedHash == null) {
       // No PIN set — ask user to create a 4-digit PIN
@@ -106,8 +109,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       );
       if (pin == null || pin.length != 4 || int.tryParse(pin) == null)
         return false;
-      final hash = _hashPin(pin, uid);
-      await docRef.set({'pinHash': hash}, SetOptions(merge: true));
+      final hash = _hashPin(pin, uid ?? 'device');
+      await _secure.write(key: key, value: hash);
       return true;
     }
 
@@ -134,7 +137,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             onPressed: () {
               final p = controller.text;
               if (p.length == 4 && int.tryParse(p) != null) {
-                final h = _hashPin(p, uid);
+                final h = _hashPin(
+                  p,
+                  ref.read(authServiceProvider).userId ?? 'device',
+                );
                 Navigator.pop(ctx, h == storedHash);
               } else {
                 Navigator.pop(ctx, false);
@@ -171,8 +177,121 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     return result ?? false;
   }
 
+  Future<void> _showAuthOptions() async {
+    // If user is signed in, do nothing — enter will handle biometric/pin.
+    // Otherwise show options to login or create account.
+    final auth = ref.read(authServiceProvider);
+    if (auth.isSignedIn && !auth.isAnonymous) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Sign in to your account',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => _showEmailAuthDialog(signUp: false),
+                      child: const Text('Login'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _showEmailAuthDialog(signUp: true),
+                      child: const Text('Create account'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () async {
+                  // allow anonymous continue
+                  Navigator.pop(ctx);
+                  await ref
+                      .read(authServiceProvider)
+                      .signInAnonymouslyIfNeeded();
+                  setState(() {});
+                },
+                child: const Text('Continue anonymously'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEmailAuthDialog({required bool signUp}) async {
+    final emailController = TextEditingController();
+    final passController = TextEditingController();
+    final success = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(signUp ? 'Create account' : 'Login'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              try {
+                if (signUp) {
+                  await ref
+                      .read(authServiceProvider)
+                      .signUp(emailController.text.trim(), passController.text);
+                } else {
+                  await ref
+                      .read(authServiceProvider)
+                      .signIn(emailController.text.trim(), passController.text);
+                }
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('stayLoggedIn', true);
+                Navigator.pop(ctx, true);
+                setState(() {});
+              } catch (e) {
+                Navigator.pop(ctx, false);
+              }
+            },
+            child: const Text('continue'),
+          ),
+        ],
+      ),
+    );
+    if (success == true) {
+      // stay on lock screen; user will press enter to authenticate locally
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = ref.read(authServiceProvider);
+    final signedIn = auth.isSignedIn && !auth.isAnonymous;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -187,7 +306,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'track only what matters',
+                signedIn
+                    ? 'press enter to unlock (fingerprint or PIN)'
+                    : 'please login or create an account',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -202,18 +323,29 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              FilledButton(
-                onPressed: _busy ? null : _enter,
-                child: _busy
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('enter'),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _busy ? null : _enter,
+                      child: _busy
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('enter'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    onPressed: _showAuthOptions,
+                    icon: const Icon(Icons.person),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
             ],

@@ -8,24 +8,18 @@ import 'models/transaction.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
-final userIdProvider = FutureProvider<String>((ref) async {
-  return ref.read(authServiceProvider).signInAnonymouslyIfNeeded();
+final userIdProvider = Provider<String?>((ref) {
+  return ref.read(authServiceProvider).userId;
 });
 
 final transactionRepoProvider = Provider<TransactionRepository?>((ref) {
-  final uidAsync = ref.watch(userIdProvider);
-  return uidAsync.maybeWhen(
-    data: (uid) => TransactionRepository(uid),
-    orElse: () => null,
-  );
+  final uid = ref.watch(userIdProvider);
+  return uid != null ? TransactionRepository(uid) : null;
 });
 
 final subscriptionRepoProvider = Provider<SubscriptionRepository?>((ref) {
-  final uidAsync = ref.watch(userIdProvider);
-  return uidAsync.maybeWhen(
-    data: (uid) => SubscriptionRepository(uid),
-    orElse: () => null,
-  );
+  final uid = ref.watch(userIdProvider);
+  return uid != null ? SubscriptionRepository(uid) : null;
 });
 
 final transactionsProvider = StreamProvider<List<Txn>>((ref) {
@@ -44,7 +38,11 @@ class MonthStats {
   final double earned;
   final double spent;
   final double balance;
-  const MonthStats({required this.earned, required this.spent, required this.balance});
+  const MonthStats({
+    required this.earned,
+    required this.spent,
+    required this.balance,
+  });
 }
 
 final monthStatsProvider = Provider<MonthStats>((ref) {
