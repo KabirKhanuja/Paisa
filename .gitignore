@@ -48,6 +48,6 @@ app.*.map.json
 .env
 .env.*
 
-# Firebase config (should not be committed)
+# Firebase config 
 /android/app/google-services.json
 **/GoogleService-Info.plist

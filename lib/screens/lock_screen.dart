@@ -49,7 +49,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       if (!ok) {
         ok = await _showPinFallback();
       }
-    } on PlatformException {
+    } catch (_) {
       ok = await _showPinFallback();
     }
 
@@ -216,11 +216,16 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () async {
-                  // allow anonymous continue
+                  // allow anonymous continue — if Firebase isn't configured,
+                  // fall back to device-only mode without attempting sign-in.
                   Navigator.pop(ctx);
-                  await ref
-                      .read(authServiceProvider)
-                      .signInAnonymouslyIfNeeded();
+                  try {
+                    await ref
+                        .read(authServiceProvider)
+                        .signInAnonymouslyIfNeeded();
+                  } catch (_) {
+                    // ignore: proceed without Firebase
+                  }
                   setState(() {});
                 },
                 child: const Text('Continue anonymously'),
