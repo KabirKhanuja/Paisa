@@ -1,16 +1,46 @@
-# paisa
 
-A new Flutter project.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Stack
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter (Material 3)
+- Riverpod
+- Firebase (Firestore + anonymous Auth)
+- `local_auth` for biometrics
+- `fl_chart` for the monthly chart
+
+## Setup
+
+1. `flutter pub get`
+2. Configure Firebase:
+   ```
+   dart pub global activate flutterfire_cli
+   flutterfire configure
+   ```
+   This generates `lib/firebase_options.dart`. Update [lib/main.dart](lib/main.dart) to import it and pass it to `Firebase.initializeApp`.
+3. Enable **Anonymous** sign-in in Firebase Auth, and create a **Cloud Firestore** database.
+4. `flutter run`
+
+## Data model
+
+```
+users/
+  {userId}/
+    transactions/
+      {txnId} — { amount, type: "earn"|"spend", timestamp }
+    subscriptions/
+      {subId} — { name, amount, cycle: "monthly"|"yearly" }
+```
+
+## Project layout
+
+- [lib/main.dart](lib/main.dart) — bootstrap
+- [lib/app.dart](lib/app.dart) — `MaterialApp` + theme wiring
+- [lib/theme.dart](lib/theme.dart) — colors and Material 3 theme
+- [lib/models/](lib/models/) — `Txn`, `Subscription`
+- [lib/data/](lib/data/) — Firestore repositories + auth service
+- [lib/providers.dart](lib/providers.dart) — Riverpod providers
+- [lib/screens/](lib/screens/) — Lock, Home, Add, History, Subscriptions
+- [lib/widgets/](lib/widgets/) — `BalanceCard`, `QuickStats`, `MonthlyChart`, `NumericKeypad`
