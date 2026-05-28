@@ -1,0 +1,260 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:12px 0}
+.screen-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:center;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+.phone{background:#F0F4FA;border-radius:28px;border:1.5px solid #E0E7F0;overflow:hidden;aspect-ratio:9/19;display:flex;flex-direction:column;position:relative}
+.status{background:#1A1A2E;padding:10px 16px 6px;display:flex;justify-content:space-between}
+.status span{color:#fff;font-size:10px;font-weight:500}
+.lockscreen-time{background:#1A1A2E;padding:20px 16px 10px;text-align:center}
+.lock-time{color:#fff;font-size:32px;font-weight:300;letter-spacing:-1px}
+.lock-date{color:rgba(255,255,255,.6);font-size:10px;margin-top:2px}
+
+.notif-card{background:rgba(255,255,255,.92);border-radius:14px;margin:10px 10px 0;padding:10px 12px;backdrop-filter:blur(10px)}
+.notif-header{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.notif-app-ico{width:18px;height:18px;border-radius:5px;background:#1A56DB;display:flex;align-items:center;justify-content:center}
+.notif-app-name{font-size:9px;font-weight:500;color:#555;flex:1}
+.notif-time{font-size:8.5px;color:#999}
+.notif-title{font-size:11px;font-weight:500;color:#0D2A50;margin-bottom:3px}
+.notif-body{font-size:9.5px;color:#555;line-height:1.4;margin-bottom:8px}
+.notif-actions{display:flex;gap:6px}
+.notif-act{flex:1;padding:5px 0;border-radius:8px;text-align:center;font-size:9px;font-weight:500}
+.notif-act.food{background:#EAF1FF;color:#1A56DB}
+.notif-act.petrol{background:#FEF6E7;color:#854F0B}
+.notif-act.more{background:#F0F4FA;color:#555}
+
+.notif-card2{background:rgba(255,255,255,.92);border-radius:14px;margin:8px 10px 0;padding:10px 12px}
+.notif2-header{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.notif2-title{font-size:10.5px;font-weight:500;color:#0D2A50}
+.notif2-body{font-size:9px;color:#7A9CC0}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:#1A56DB;flex-shrink:0}
+
+.phone-body{flex:1;background:#1A1A2E}
+.home-indicator{height:18px;display:flex;align-items:center;justify-content:center;background:#1A1A2E}
+.home-bar{width:60px;height:3px;background:rgba(255,255,255,.3);border-radius:2px}
+
+.phone2{background:#fff;border-radius:28px;border:1.5px solid #E0E7F0;overflow:hidden;aspect-ratio:9/19;display:flex;flex-direction:column;position:relative}
+.app-bg{flex:1;background:#F5F8FF;position:relative;overflow:hidden}
+.dimmer{position:absolute;inset:0;background:rgba(13,42,80,.35)}
+.sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;padding:14px 14px 10px}
+.sheet-handle{width:32px;height:3px;background:#E0E7F0;border-radius:2px;margin:0 auto 12px}
+.sheet-amt{font-size:22px;font-weight:500;color:#0D2A50;letter-spacing:-.5px}
+.sheet-sub{font-size:9px;color:#7A9CC0;margin-top:2px;margin-bottom:12px}
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.cat-chip{border-radius:10px;padding:8px 4px;text-align:center;border:.5px solid #E0E7F0;cursor:pointer}
+.cat-chip.sel{border-color:#1A56DB;background:#EAF1FF}
+.cat-ico{font-size:16px;display:block;margin-bottom:3px}
+.cat-name{font-size:8.5px;font-weight:500;color:#0D2A50}
+.cat-chip.sel .cat-name{color:#1A56DB}
+.note-field{background:#F5F8FF;border-radius:8px;padding:8px 10px;font-size:9.5px;color:#7A9CC0;margin-bottom:10px;border:.5px solid #E0E7F0}
+.confirm-btn{background:#1A56DB;border-radius:10px;padding:9px;text-align:center;color:#fff;font-size:10px;font-weight:500}
+
+.phone3{background:#fff;border-radius:28px;border:1.5px solid #E0E7F0;overflow:hidden;aspect-ratio:9/19;display:flex;flex-direction:column}
+.status-blue{background:#1A56DB;padding:10px 16px 6px;display:flex;justify-content:space-between}
+.status-blue span{color:#fff;font-size:10px;font-weight:500}
+.amt-header{background:#1A56DB;padding:12px 16px 16px}
+.amt-bal-lbl{color:#93B4F5;font-size:9px}
+.amt-bal{color:#fff;font-size:24px;font-weight:500;letter-spacing:-.5px}
+.body3{padding:10px 12px;flex:1}
+.section-hd{font-size:9px;font-weight:500;color:#7A9CC0;letter-spacing:.4px;margin:8px 0 5px}
+.untagged-banner{background:#FEF6E7;border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;margin-bottom:8px;border:.5px solid #FAC775}
+.untagged-ico{font-size:14px;color:#854F0B;flex-shrink:0}
+.untagged-text{flex:1}
+.untagged-title{font-size:9.5px;font-weight:500;color:#633806}
+.untagged-sub{font-size:8.5px;color:#854F0B}
+.untagged-btn{font-size:8.5px;font-weight:500;color:#1A56DB;background:#EAF1FF;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.log-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:.5px solid #F0F4FA}
+.log-row:last-child{border-bottom:none}
+.log-ico{width:26px;height:26px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.log-info{flex:1}
+.log-title{font-size:10px;font-weight:500;color:#0D2A50}
+.log-meta{font-size:8.5px;color:#7A9CC0}
+.log-amt{font-size:10px;font-weight:500}
+.tag-pill{font-size:7.5px;padding:1px 5px;border-radius:5px;font-weight:500;display:inline-block;margin-left:4px}
+.untagged-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:.5px solid #FEF6E7}
+.untagged-row:last-child{border-bottom:none}
+.q-ico{width:26px;height:26px;border-radius:9px;background:#FEF6E7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#854F0B}
+.nav{background:#fff;border-top:.5px solid #E0E7F0;display:flex;justify-content:space-around;padding:7px 4px 9px;flex-shrink:0}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7px;color:#7A9CC0;font-weight:500}
+.nav-item.act{color:#1A56DB}
+.nav-item i{font-size:14px}
+.badge{background:#E24B4A;color:#fff;font-size:7px;font-weight:500;border-radius:10px;padding:1px 4px;position:relative;top:-6px;left:-6px;margin-right:-8px}
+</style>
+
+<h2 class="sr-only">Tagging flow mockup: bank notification with quick actions, bottom sheet category picker, and untagged items view in the Amount screen</h2>
+
+<div class="wrap">
+
+<div>
+  <p class="screen-label">1. Notification fires</p>
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="lockscreen-time">
+      <div class="lock-time">9:41</div>
+      <div class="lock-date">Thursday, 29 May</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-header">
+        <div class="notif-app-ico"><i class="ti ti-bolt" style="color:#fff;font-size:10px"></i></div>
+        <div class="notif-app-name">Vault</div>
+        <div class="notif-time">now</div>
+      </div>
+      <div class="notif-title">You paid ₹340 · Tag it?</div>
+      <div class="notif-body">Axis Bank debit just now. Takes 2 seconds — what was this for?</div>
+      <div class="notif-actions">
+        <div class="notif-act food">🍔 Food</div>
+        <div class="notif-act petrol">⛽ Petrol</div>
+        <div class="notif-act more">More →</div>
+      </div>
+    </div>
+
+    <div class="notif-card2">
+      <div class="notif2-header">
+        <div style="width:18px;height:18px;border-radius:5px;background:#0F6E56;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-building-bank" style="color:#fff;font-size:10px"></i></div>
+        <div style="flex:1;margin-left:6px">
+          <div class="notif2-title">Axis Bank</div>
+        </div>
+        <div style="font-size:8.5px;color:#999">now</div>
+      </div>
+      <div class="notif2-body">A/c XX4321 debited ₹340.00. Avl Bal ₹42,240.00</div>
+    </div>
+
+    <div class="phone-body"></div>
+    <div class="home-indicator"><div class="home-bar"></div></div>
+  </div>
+</div>
+
+<div>
+  <p class="screen-label">2. Bottom sheet opens</p>
+  <div class="phone2">
+    <div class="status" style="background:#1A56DB"><span style="color:#fff">9:41</span><span style="color:#fff">●●● 100%</span></div>
+    <div class="app-bg">
+      <div class="dimmer"></div>
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-amt">−₹340</div>
+        <div class="sheet-sub">Axis Bank · just now · what was this for?</div>
+        <div class="cats">
+          <div class="cat-chip sel">
+            <span class="cat-ico">🍔</span>
+            <span class="cat-name">Food</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">🚌</span>
+            <span class="cat-name">Transport</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">🛒</span>
+            <span class="cat-name">Shopping</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">⛽</span>
+            <span class="cat-name">Petrol</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">👤</span>
+            <span class="cat-name">Friend</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">💊</span>
+            <span class="cat-name">Health</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">📱</span>
+            <span class="cat-name">Bills</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">🎉</span>
+            <span class="cat-name">Outing</span>
+          </div>
+          <div class="cat-chip">
+            <span class="cat-ico">•••</span>
+            <span class="cat-name">Other</span>
+          </div>
+        </div>
+        <div class="note-field">Add a note (optional) · e.g. Swiggy lunch</div>
+        <div class="confirm-btn">Done · tag as Food</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <p class="screen-label">3. Untagged fallback</p>
+  <div class="phone3">
+    <div class="status-blue"><span>9:41</span><span>●●● 100%</span></div>
+    <div class="amt-header">
+      <div class="amt-bal-lbl">CURRENT BALANCE</div>
+      <div class="amt-bal">₹42,240</div>
+    </div>
+    <div class="body3">
+      <div class="untagged-banner">
+        <i class="ti ti-tag alert-ico untagged-ico"></i>
+        <div class="untagged-text">
+          <div class="untagged-title">3 payments untagged</div>
+          <div class="untagged-sub">Takes 30 seconds to clear</div>
+        </div>
+        <div class="untagged-btn">Tag now</div>
+      </div>
+
+      <div class="section-hd">UNTAGGED</div>
+      <div class="untagged-row">
+        <div class="q-ico"><i class="ti ti-question-mark"></i></div>
+        <div class="log-info">
+          <div class="log-title">₹340 · Axis Bank</div>
+          <div class="log-meta">Today, 9:38 AM</div>
+        </div>
+        <div style="font-size:8.5px;color:#1A56DB;font-weight:500">Tag →</div>
+      </div>
+      <div class="untagged-row">
+        <div class="q-ico"><i class="ti ti-question-mark"></i></div>
+        <div class="log-info">
+          <div class="log-title">₹1,200 · Axis Bank</div>
+          <div class="log-meta">Yesterday, 8:12 PM</div>
+        </div>
+        <div style="font-size:8.5px;color:#1A56DB;font-weight:500">Tag →</div>
+      </div>
+      <div class="untagged-row">
+        <div class="q-ico"><i class="ti ti-question-mark"></i></div>
+        <div class="log-info">
+          <div class="log-title">₹180 · Axis Bank</div>
+          <div class="log-meta">May 27, 6:45 PM</div>
+        </div>
+        <div style="font-size:8.5px;color:#1A56DB;font-weight:500">Tag →</div>
+      </div>
+
+      <div class="section-hd">TAGGED</div>
+      <div class="log-row">
+        <div class="log-ico" style="background:#F0FAF5"><i class="ti ti-arrow-down-circle" style="color:#0F6E56;font-size:12px"></i></div>
+        <div class="log-info">
+          <div style="display:flex;align-items:center;flex-wrap:wrap">
+            <div class="log-title">Salary credit</div>
+            <span class="tag-pill" style="background:#F0FAF5;color:#0F6E56">Income</span>
+          </div>
+          <div class="log-meta">Today, 9:00 AM · Auto-tagged</div>
+        </div>
+        <div class="log-amt" style="color:#1A56DB">+₹40,000</div>
+      </div>
+      <div class="log-row">
+        <div class="log-ico" style="background:#EAF1FF"><i class="ti ti-bus" style="color:#1A56DB;font-size:12px"></i></div>
+        <div class="log-info">
+          <div style="display:flex;align-items:center">
+            <div class="log-title">Ola ride</div>
+            <span class="tag-pill" style="background:#EAF1FF;color:#1A56DB">Transport</span>
+          </div>
+          <div class="log-meta">Yesterday, 8:40 PM</div>
+        </div>
+        <div class="log-amt" style="color:#E24B4A">−₹180</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-item"><i class="ti ti-home"></i>Home</div>
+      <div class="nav-item act"><i class="ti ti-wallet"></i>Amount<span class="badge">3</span></div>
+      <div class="nav-item"><i class="ti ti-calculator"></i>Budget</div>
+      <div class="nav-item"><i class="ti ti-chart-bar"></i>Analytics</div>
+      <div class="nav-item"><i class="ti ti-settings"></i>Settings</div>
+    </div>
+  </div>
+</div>
+
+</div>
