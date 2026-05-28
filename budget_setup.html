@@ -1,0 +1,283 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Budget Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Work Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-border {
+            border: 0.5px solid #7A9CC0;
+        }
+        input:focus {
+            outline: none;
+            border-color: #003fb1 !important;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#eeeeee",
+                      "secondary-fixed": "#cfe5ff",
+                      "on-primary-container": "#d4dcff",
+                      "on-secondary-fixed-variant": "#264969",
+                      "primary-fixed": "#dbe1ff",
+                      "surface-bright": "#f9f9f9",
+                      "outline-variant": "#c3c5d7",
+                      "tertiary": "#940f1a",
+                      "surface": "#f9f9f9",
+                      "error-container": "#ffdad6",
+                      "outline": "#737686",
+                      "on-surface": "#1a1c1c",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#900a18",
+                      "primary": "#003fb1",
+                      "on-surface-variant": "#434654",
+                      "surface-tint": "#1353d8",
+                      "primary-container": "#1a56db",
+                      "surface-container-high": "#e8e8e8",
+                      "on-tertiary-fixed": "#410004",
+                      "on-tertiary": "#ffffff",
+                      "inverse-on-surface": "#f0f1f1",
+                      "surface-container-highest": "#e2e2e2",
+                      "secondary-fixed-dim": "#a7caf0",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-error": "#ffffff",
+                      "secondary": "#3f6182",
+                      "surface-variant": "#e2e2e2",
+                      "tertiary-fixed-dim": "#ffb3ae",
+                      "inverse-surface": "#2f3131",
+                      "tertiary-fixed": "#ffdad7",
+                      "on-tertiary-container": "#ffd3cf",
+                      "on-secondary-container": "#3c5e7f",
+                      "secondary-container": "#b5d8fe",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#00174d",
+                      "on-primary": "#ffffff",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-dim": "#dadada",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#f3f3f4",
+                      "error": "#ba1a1a",
+                      "on-background": "#1a1c1c",
+                      "background": "#f9f9f9",
+                      "tertiary-container": "#b72b2f",
+                      "on-secondary-fixed": "#001d33",
+                      "on-primary-fixed-variant": "#003dab"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "12px",
+                      "margin-desktop": "40px",
+                      "base": "8px",
+                      "margin-mobile": "20px",
+                      "gutter": "16px",
+                      "stack-sm": "4px",
+                      "stack-lg": "24px"
+              },
+              "fontFamily": {
+                      "body-md": ["Work Sans"],
+                      "body-lg": ["Work Sans"],
+                      "label-md": ["Work Sans"],
+                      "amount-display": ["Work Sans"],
+                      "headline-lg-mobile": ["Work Sans"],
+                      "label-sm": ["Work Sans"],
+                      "headline-md": ["Work Sans"],
+                      "headline-lg": ["Work Sans"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "amount-display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background min-h-screen text-on-background pb-24">
+<!-- Top App Bar -->
+<header class="bg-primary dark:bg-primary-container w-full h-16 flex items-center border-b border-outline-variant fixed top-0 left-0 z-50 px-margin-mobile justify-between transition-colors duration-200">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-primary">account_balance_wallet</span>
+<h1 class="font-headline-md text-headline-md text-on-primary font-semibold">Budget Setup</h1>
+</div>
+<button class="p-2 hover:bg-primary-fixed-dim/10 rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-primary">more_vert</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="mt-20 px-margin-mobile flex flex-col gap-stack-lg max-w-2xl mx-auto">
+<!-- Salary Section -->
+<section class="flex flex-col gap-stack-md">
+<label class="font-label-md text-label-md text-outline" for="monthly-income">Monthly Income</label>
+<div class="bg-surface-container-lowest custom-border rounded-[14px] p-6 flex flex-col gap-stack-sm">
+<div class="flex items-baseline gap-2">
+<span class="font-amount-display text-amount-display text-primary">₹</span>
+<input class="font-amount-display text-amount-display bg-transparent border-none p-0 w-full focus:ring-0" id="monthly-income" placeholder="0" type="number" value="125000">
+</div>
+<p class="font-label-sm text-label-sm text-outline">Enter your net take-home salary</p>
+</div>
+</section>
+<!-- Expenses Section -->
+<section class="flex flex-col gap-stack-md">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-on-surface">Fixed Expenses</h2>
+<span class="font-label-md text-label-md text-outline" id="expense-count">3 Items</span>
+</div>
+<div class="flex flex-col gap-stack-md" id="expense-list">
+<!-- Claude Expense -->
+<div class="bg-surface-container-lowest custom-border rounded-[14px] p-4 flex justify-between items-center transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-fixed flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-on-secondary-fixed-variant" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Claude</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-secondary">₹2,251</span>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- Music Expense -->
+<div class="bg-surface-container-lowest custom-border rounded-[14px] p-4 flex justify-between items-center transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-fixed flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-on-secondary-fixed-variant" style="font-variation-settings: 'FILL' 1;">music_note</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Music</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-secondary">₹4,800</span>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- Petrol Expense -->
+<div class="bg-surface-container-lowest custom-border rounded-[14px] p-4 flex justify-between items-center transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-fixed flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-on-secondary-fixed-variant" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Petrol</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-secondary">₹600</span>
+<span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Add Expense Row -->
+<button class="w-full h-12 flex items-center justify-center gap-2 custom-border border-dashed rounded-[14px] hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">add_circle</span>
+<span class="font-label-md text-label-md text-primary">Add expense</span>
+</button>
+</section>
+<!-- Spending Cap Section -->
+<section class="flex flex-col gap-stack-md">
+<label class="font-label-md text-label-md text-outline" for="spending-cap">Spending Cap (Optional)</label>
+<div class="bg-surface-container-lowest custom-border rounded-[14px] p-4 flex items-center gap-4">
+<span class="material-symbols-outlined text-outline">track_changes</span>
+<input class="font-body-lg text-body-lg bg-transparent border-none p-0 w-full focus:ring-0 text-on-surface" id="spending-cap" placeholder="Limit your total spending" type="number" value="85000">
+</div>
+</section>
+<!-- Flex Calculation Banner -->
+<div class="bg-primary rounded-[14px] p-6 flex flex-col items-center gap-2 text-on-primary text-center" id="flex-banner">
+<p class="font-label-sm text-label-sm opacity-80 uppercase tracking-wider">Remaining for leisure</p>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg-mobile text-headline-lg-mobile">₹</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold" id="flex-amount">1,17,349</span>
+</div>
+<p class="font-label-sm text-label-sm">Flex Budget Remaining</p>
+</div>
+<!-- Action Button -->
+<button class="bg-primary text-on-primary font-label-md text-label-md py-4 rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+<span class="">Confirm Budget Plan</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 h-14 flex justify-around items-center bg-surface-container-lowest border-t border-outline-variant"><a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:bg-surface-container-low transition-colors w-full h-full" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:bg-surface-container-low transition-colors w-full h-full" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm">Amount</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed hover:bg-surface-container-low transition-transform scale-95 active:scale-100 w-full h-full" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">savings</span>
+<span class="font-label-sm text-label-sm">Budget</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:bg-surface-container-low transition-colors w-full h-full" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+<span class="font-label-sm text-label-sm">Analytics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant hover:bg-surface-container-low transition-colors w-full h-full" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a></nav>
+<script>
+        const incomeInput = document.getElementById('monthly-income');
+        const capInput = document.getElementById('spending-cap');
+        const flexAmountDisplay = document.getElementById('flex-amount');
+
+        const fixedExpenses = [2251, 4800, 600];
+        const totalFixed = fixedExpenses.reduce((a, b) => a + b, 0);
+
+        function updateFlexBudget() {
+            const income = parseFloat(incomeInput.value) || 0;
+            // The logic: Flex Budget = Total Income - Fixed Expenses
+            // If spending cap is provided, show progress toward it? 
+            // Instructions say: "Flex budget remaining calculation: ₹XX,XXX Flex Budget Remaining calculated live"
+            const flex = income - totalFixed;
+            
+            flexAmountDisplay.innerText = new Intl.NumberFormat('en-IN').format(flex);
+        }
+
+        incomeInput.addEventListener('input', updateFlexBudget);
+        updateFlexBudget();
+
+        // Micro-interaction for cards
+        document.querySelectorAll('.bg-surface-container-lowest.custom-border').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.classList.add('bg-primary-fixed-dim/5');
+            });
+            card.addEventListener('mouseup', () => {
+                card.classList.remove('bg-primary-fixed-dim/5');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('bg-primary-fixed-dim/5');
+            });
+        });
+    </script>
+</body></html>

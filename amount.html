@@ -1,0 +1,262 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Vault - Amount</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Work Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#737686",
+                        "surface-container-high": "#e8e8e8",
+                        "on-surface-variant": "#434654",
+                        "secondary-fixed-dim": "#a7caf0",
+                        "outline-variant": "#c3c5d7",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary-container": "#3c5e7f",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-tint": "#1353d8",
+                        "on-surface": "#1a1c1c",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#264969",
+                        "on-primary-fixed": "#00174d",
+                        "surface-dim": "#dadada",
+                        "surface": "#f9f9f9",
+                        "on-tertiary-fixed-variant": "#900a18",
+                        "secondary-fixed": "#cfe5ff",
+                        "inverse-surface": "#2f3131",
+                        "tertiary": "#940f1a",
+                        "secondary-container": "#b5d8fe",
+                        "secondary": "#3f6182",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-variant": "#e2e2e2",
+                        "on-background": "#1a1c1c",
+                        "on-tertiary-container": "#ffd3cf",
+                        "on-secondary-fixed": "#001d33",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#410004",
+                        "primary": "#003fb1",
+                        "surface-container-highest": "#e2e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "tertiary-container": "#b72b2f",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f0f1f1",
+                        "surface-container-low": "#f3f3f4",
+                        "surface-bright": "#f9f9f9",
+                        "primary-container": "#1a56db",
+                        "on-primary-fixed-variant": "#003dab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-desktop": "40px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "stack-sm": "4px",
+                        "stack-md": "12px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Work Sans"],
+                        "label-md": ["Work Sans"],
+                        "headline-md": ["Work Sans"],
+                        "amount-display": ["Work Sans"],
+                        "headline-lg": ["Work Sans"],
+                        "body-lg": ["Work Sans"],
+                        "headline-lg-mobile": ["Work Sans"],
+                        "body-md": ["Work Sans"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                        "amount-display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- Top AppBar -->
+
+<main class="flex-grow flex flex-col">
+<!-- Hero Balance Section -->
+<section class="bg-primary pt-10 pb-12 px-margin-mobile text-on-primary">
+<div class="flex flex-col items-center text-center space-y-4">
+<p class="font-label-md text-label-md text-on-primary-container uppercase tracking-widest opacity-80">Total Balance</p>
+<h2 class="font-amount-display text-amount-display">₹84,250.00</h2>
+<div class="flex gap-4 w-full max-w-sm pt-6">
+<button class="flex-1 bg-surface-container-lowest text-primary py-3 rounded-full font-label-md text-label-md font-bold shadow-sm active:scale-95 transition-transform">
+                        Add money
+                    </button>
+<button class="flex-1 bg-transparent border-[0.5px] border-on-primary-container text-on-primary py-3 rounded-full font-label-md text-label-md font-bold active:scale-95 transition-transform">
+                        Subtract
+                    </button>
+</div>
+</div>
+</section>
+<!-- Transaction Log -->
+<section class="px-margin-mobile py-stack-lg flex-grow overflow-y-auto hide-scrollbar pb-24">
+<!-- Group: Today -->
+<div class="mb-stack-lg">
+<h3 class="font-label-md text-label-md text-outline mb-stack-md flex items-center gap-2">
+                    Today
+                    <span class="h-[0.5px] flex-grow bg-outline-variant"></span>
+</h3>
+<div class="space-y-base">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest border-[0.5px] border-outline-variant rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md font-semibold">Zomato</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-[10px] font-bold text-outline uppercase">manual</span>
+</div>
+<div class="flex items-center gap-2 text-outline text-label-sm font-label-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-container">Food</span>
+<span class="">12:45 PM</span>
+</div>
+</div>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-tertiary">-₹620.00</span>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest border-[0.5px] border-outline-variant rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">shopping_bag</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md font-semibold">Amazon</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-[10px] font-bold text-on-primary-fixed uppercase">auto</span>
+</div>
+<div class="flex items-center gap-2 text-outline text-label-sm font-label-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-container">Shopping</span>
+<span class="">10:30 AM</span>
+</div>
+</div>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-tertiary">-₹2,100.00</span>
+</div>
+</div>
+</div>
+<!-- Group: Yesterday -->
+<div class="mb-stack-lg">
+<h3 class="font-label-md text-label-md text-outline mb-stack-md flex items-center gap-2">
+                    Yesterday
+                    <span class="h-[0.5px] flex-grow bg-outline-variant"></span>
+</h3>
+<div class="space-y-base">
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest border-[0.5px] border-outline-variant rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">local_gas_station</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md font-semibold">Petrol</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-[10px] font-bold text-outline uppercase">manual</span>
+</div>
+<div class="flex items-center gap-2 text-outline text-label-sm font-label-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-container">Fuel</span>
+<span class="">05:15 PM</span>
+</div>
+</div>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-tertiary">-₹1,500.00</span>
+</div>
+<!-- Item 4 -->
+<div class="bg-surface-container-lowest border-[0.5px] border-outline-variant rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md font-semibold">Electricity Bill</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-[10px] font-bold text-on-primary-fixed uppercase">auto</span>
+</div>
+<div class="flex items-center gap-2 text-outline text-label-sm font-label-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-container">Bills</span>
+<span class="">09:00 AM</span>
+</div>
+</div>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-tertiary">-₹3,400.00</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface-container-lowest dark:bg-inverse-surface border-t-[0.5px] border-outline-variant h-[56px] px-2"><a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:bg-primary/5 transition-colors duration-200" href="#"><span class="material-symbols-outlined">home</span><span class="font-label-sm text-label-sm">Home</span></a><a class="flex flex-col items-center justify-center text-primary dark:text-inverse-primary bg-primary/5 dark:bg-primary-container/20 rounded-xl px-4 py-1 active:scale-95 transition-transform duration-150" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span><span class="font-label-sm text-label-sm">Amount</span></a><a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:bg-primary/5 transition-colors duration-200" href="#"><span class="material-symbols-outlined">savings</span><span class="font-label-sm text-label-sm">Budget</span></a><a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:bg-primary/5 transition-colors duration-200" href="#"><span class="material-symbols-outlined">query_stats</span><span class="font-label-sm text-label-sm">Analytics</span></a><a class="flex flex-col items-center justify-center text-outline dark:text-outline-variant px-4 py-1 hover:bg-primary/5 transition-colors duration-200" href="#"><span class="material-symbols-outlined">settings</span><span class="font-label-sm text-label-sm">Settings</span></a></nav>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Simple scroll appearance for top app bar
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>

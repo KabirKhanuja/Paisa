@@ -1,0 +1,267 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Vault - New Transaction</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#410004",
+                        "inverse-surface": "#2f3131",
+                        "surface-bright": "#f9f9f9",
+                        "on-secondary-fixed": "#001d33",
+                        "primary-container": "#1a56db",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "surface-container-low": "#f3f3f4",
+                        "secondary-container": "#b5d8fe",
+                        "on-surface": "#1a1c1c",
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#264969",
+                        "secondary-fixed-dim": "#a7caf0",
+                        "tertiary-container": "#b72b2f",
+                        "surface-dim": "#dadada",
+                        "on-tertiary-fixed-variant": "#900a18",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#00174d",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9f9f9",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#cfe5ff",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#940f1a",
+                        "outline": "#737686",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b5c4ff",
+                        "primary": "#003fb1",
+                        "surface-container": "#eeeeee",
+                        "outline-variant": "#c3c5d7",
+                        "on-primary-container": "#d4dcff",
+                        "surface-tint": "#1353d8",
+                        "secondary": "#3f6182",
+                        "on-tertiary-container": "#ffd3cf",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-surface-variant": "#434654",
+                        "surface-container-high": "#e8e8e8",
+                        "on-secondary-container": "#3c5e7f",
+                        "on-background": "#1a1c1c",
+                        "inverse-on-surface": "#f0f1f1",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "14px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "4px",
+                        "base": "8px",
+                        "stack-lg": "24px",
+                        "stack-md": "12px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "40px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Work Sans"],
+                        "body-md": ["Work Sans"],
+                        "amount-display": ["Work Sans"],
+                        "label-sm": ["Work Sans"],
+                        "headline-lg-mobile": ["Work Sans"],
+                        "headline-lg": ["Work Sans"],
+                        "body-lg": ["Work Sans"],
+                        "headline-md": ["Work Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "amount-display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .keypad-button:active {
+            background-color: rgba(0, 63, 177, 0.05);
+            transform: scale(0.95);
+        }
+        .custom-border {
+            border: 0.5px solid #737686;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Contextual Suppression: No Bottom Nav, but we use TopAppBar for Identity) -->
+<nav class="flex justify-between items-center w-full px-margin-mobile py-base border-b border-outline-variant bg-surface sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<button class="p-2 -ml-2 rounded-full hover:bg-primary/5 transition-colors" onclick="window.history.back()">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="text-headline-md font-headline-md font-bold text-primary">New Transaction</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A clean, professional studio headshot of a young adult with a friendly expression. The lighting is soft and even, against a neutral light gray background, maintaining the minimalist and airy aesthetic of a high-end personal finance application. The overall mood is approachable and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBT8_RglvZuWLfqMpf8VjzSoSTZAVYGGAcc44C2Fop5CbocVPKmFnQq3RadNAbAZHyuEjx-TjvOTI0ViF4eWT7VkGR_ESfTBc1Zn2Kd9lM5QM0e2kMuffRs6C79mERetqhxW9bkTZngXBxXlC8KBJgV9jfNmnaKpIDUBGdxK-cB3i8VhA-zbCtD-wZSNDbgyttgMowFcjDlFU9Q_9lo9NqCpTzpCQaUfDxVzo8mj09zbU-ZVJQPEBfEyiTRdFxWIxNk-_HPGMp5iRE">
+</div>
+</nav>
+<main class="flex-grow flex flex-col px-margin-mobile pt-stack-lg max-w-md mx-auto w-full">
+<!-- Toggle Control -->
+<div class="flex bg-surface-container-low p-1 rounded-xl custom-border mb-stack-lg">
+<button class="flex-1 py-2 text-label-md font-label-md rounded-lg transition-all bg-primary text-on-primary" id="btn-subtract" onclick="toggleType('subtract')">
+                Subtract
+            </button>
+<button class="flex-1 py-2 text-label-md font-label-md rounded-lg transition-all text-on-surface-variant hover:bg-primary/5" id="btn-add" onclick="toggleType('add')">
+                Add
+            </button>
+</div>
+<!-- Amount Display -->
+<div class="flex flex-col items-center justify-center mb-stack-lg py-8">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-widest mb-2">AMOUNT</span>
+<div class="flex items-center">
+<span class="text-amount-display font-amount-display text-primary mr-1" id="currency-symbol">₹</span>
+<span class="text-amount-display font-amount-display text-on-surface" id="amount-text">0</span>
+</div>
+</div>
+<!-- Input Fields -->
+<div class="space-y-stack-md mb-stack-lg">
+<div class="relative">
+<input class="w-full px-4 py-4 rounded-xl custom-border bg-white text-body-md font-body-md focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-outline/50" placeholder="What was this for?" type="text">
+</div>
+<button class="w-full px-4 py-4 rounded-xl custom-border bg-white flex items-center justify-between text-body-md font-body-md text-on-surface-variant hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">category</span>
+<span class="">Select category</span>
+</div>
+<span class="material-symbols-outlined text-outline">chevron_right</span>
+</button>
+</div>
+<!-- Numeric Keypad -->
+<div class="grid grid-cols-3 gap-3 mb-stack-lg mt-auto">
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('1')">1</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('2')">2</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('3')">3</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('4')">4</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('5')">5</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('6')">6</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('7')">7</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('8')">8</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('9')">9</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('.')">.</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all" onclick="appendNum('0')">0</button>
+<button class="keypad-button h-16 rounded-xl custom-border bg-white flex items-center justify-center text-headline-md font-headline-md transition-all text-tertiary" onclick="backspace()">
+<span class="material-symbols-outlined">backspace</span>
+</button>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-label-md text-label-md mb-margin-mobile shadow-lg shadow-primary/10 active:scale-[0.98] transition-all">
+            Confirm Transaction
+        </button>
+</main><nav class="sticky bottom-0 left-0 right-0 bg-surface border-t border-outline-variant px-2 pb-2 pt-1 flex justify-between items-center z-50">
+    <a href="#" class="flex flex-col items-center gap-1 flex-1 py-1 text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px]">home</span>
+        <span class="text-[10px] font-medium font-label-sm">Home</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 flex-1 py-1 text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px] font-fill-1">account_balance_wallet</span>
+        <span class="text-[10px] font-medium font-label-sm">Amount</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 flex-1 py-1 text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px]">savings</span>
+        <span class="text-[10px] font-medium font-label-sm">Budget</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 flex-1 py-1 text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px]">query_stats</span>
+        <span class="text-[10px] font-medium font-label-sm">Analytics</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-1 flex-1 py-1 text-on-surface-variant hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-[24px]">settings</span>
+        <span class="text-[10px] font-medium font-label-sm">Settings</span>
+    </a>
+</nav>
+<script>
+        let currentAmount = "0";
+        let currentType = "subtract"; // default
+
+        function updateDisplay() {
+            const amountEl = document.getElementById('amount-text');
+            const symbolEl = document.getElementById('currency-symbol');
+            
+            amountEl.innerText = currentAmount;
+            
+            if (currentType === 'subtract') {
+                symbolEl.classList.remove('text-primary');
+                symbolEl.classList.add('text-tertiary');
+                amountEl.classList.add('text-on-surface');
+            } else {
+                symbolEl.classList.remove('text-tertiary');
+                symbolEl.classList.add('text-primary');
+            }
+        }
+
+        function appendNum(num) {
+            if (currentAmount === "0" && num !== ".") {
+                currentAmount = num;
+            } else {
+                // Prevent multiple decimals
+                if (num === "." && currentAmount.includes(".")) return;
+                // Limit decimals to 2 places
+                if (currentAmount.includes(".") && currentAmount.split(".")[1].length >= 2) return;
+                // Limit total length
+                if (currentAmount.length >= 9) return;
+                
+                currentAmount += num;
+            }
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (currentAmount.length === 1) {
+                currentAmount = "0";
+            } else {
+                currentAmount = currentAmount.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        function toggleType(type) {
+            currentType = type;
+            const addBtn = document.getElementById('btn-add');
+            const subBtn = document.getElementById('btn-subtract');
+
+            if (type === 'add') {
+                addBtn.classList.add('bg-primary', 'text-on-primary');
+                addBtn.classList.remove('text-on-surface-variant', 'hover:bg-primary/5');
+                subBtn.classList.remove('bg-primary', 'text-on-primary');
+                subBtn.classList.add('text-on-surface-variant', 'hover:bg-primary/5');
+            } else {
+                subBtn.classList.add('bg-primary', 'text-on-primary');
+                subBtn.classList.remove('text-on-surface-variant', 'hover:bg-primary/5');
+                addBtn.classList.remove('bg-primary', 'text-on-primary');
+                addBtn.classList.add('text-on-surface-variant', 'hover:bg-primary/5');
+            }
+            updateDisplay();
+        }
+    </script>
+</body></html>

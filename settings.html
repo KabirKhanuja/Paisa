@@ -1,0 +1,298 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Vault - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#737686",
+                    "surface-container-high": "#e8e8e8",
+                    "on-surface-variant": "#434654",
+                    "secondary-fixed-dim": "#a7caf0",
+                    "outline-variant": "#c3c5d7",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-container": "#d4dcff",
+                    "on-secondary-container": "#3c5e7f",
+                    "tertiary-fixed-dim": "#ffb3ae",
+                    "on-error-container": "#93000a",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "primary-fixed": "#dbe1ff",
+                    "inverse-primary": "#b5c4ff",
+                    "surface-tint": "#1353d8",
+                    "on-surface": "#1a1c1c",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#264969",
+                    "on-primary-fixed": "#00174d",
+                    "surface-dim": "#dadada",
+                    "surface": "#f9f9f9",
+                    "on-tertiary-fixed-variant": "#900a18",
+                    "secondary-fixed": "#cfe5ff",
+                    "inverse-surface": "#2f3131",
+                    "tertiary": "#940f1a",
+                    "secondary-container": "#b5d8fe",
+                    "secondary": "#3f6182",
+                    "primary-fixed-dim": "#b5c4ff",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-variant": "#e2e2e2",
+                    "on-background": "#1a1c1c",
+                    "on-tertiary-container": "#ffd3cf",
+                    "on-secondary-fixed": "#001d33",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#410004",
+                    "primary": "#003fb1",
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#eeeeee",
+                    "tertiary-container": "#b72b2f",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f0f1f1",
+                    "surface-container-low": "#f3f3f4",
+                    "surface-bright": "#f9f9f9",
+                    "primary-container": "#1a56db",
+                    "on-primary-fixed-variant": "#003dab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-desktop": "40px",
+                    "gutter": "16px",
+                    "margin-mobile": "20px",
+                    "stack-sm": "4px",
+                    "stack-md": "12px",
+                    "stack-lg": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Work Sans"],
+                    "label-md": ["Work Sans"],
+                    "headline-md": ["Work Sans"],
+                    "amount-display": ["Work Sans"],
+                    "headline-lg": ["Work Sans"],
+                    "body-lg": ["Work Sans"],
+                    "headline-lg-mobile": ["Work Sans"],
+                    "body-md": ["Work Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "amount-display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Work Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #003fb1;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            left: calc(100% - 2px);
+            transform: translateX(-100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased pb-24">
+<!-- Top Profile Header -->
+<header class="bg-primary pt-12 pb-10 px-margin-mobile flex flex-col items-center">
+<div class="w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center mb-stack-md border-[0.5px] border-outline-variant">
+<span class="text-primary font-headline-lg-mobile text-headline-lg-mobile">A</span>
+</div>
+<h1 class="text-on-primary font-headline-md text-headline-md mb-1">Vault</h1>
+<p class="text-on-primary-container font-label-md text-label-md opacity-90">arjun.v@example.com</p>
+</header>
+<main class="mt-stack-lg px-margin-mobile flex flex-col gap-stack-lg">
+<!-- Bank Section -->
+<section>
+<h2 class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-stack-md ml-1">Bank</h2>
+<div class="bg-surface-container-lowest rounded-[14px] border-[0.5px] border-outline-variant divide-y divide-outline-variant/30">
+<div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance">account_balance</span>
+<div>
+<p class="font-label-md text-label-md">Connected: HDFC Bank</p>
+<p class="font-label-sm text-label-sm text-outline">Primary source</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="sync_alt">sync_alt</span>
+<div>
+<p class="font-label-md text-label-md">Change bank</p>
+<p class="font-label-sm text-label-sm text-outline">Update connection</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="add_card">add_card</span>
+<div>
+<p class="font-label-md text-label-md">Set starting balance</p>
+<p class="font-label-sm text-label-sm text-outline">Initial wallet state</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Permissions Section -->
+<section>
+<h2 class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-stack-md ml-1">Permissions</h2>
+<div class="bg-surface-container-lowest rounded-[14px] border-[0.5px] border-outline-variant">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+<div>
+<p class="font-label-md text-label-md">Notifications</p>
+<p class="font-label-sm text-label-sm text-outline">Transaction alerts</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent outline-none transition-all duration-200 ease-in-out left-0 top-0" id="toggle-notif" name="toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors duration-200 ease-in-out after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all after:duration-200 bg-primary" for="toggle-notif"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Preferences Section -->
+<section>
+<h2 class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-stack-md ml-1">Preferences</h2>
+<div class="bg-surface-container-lowest rounded-[14px] border-[0.5px] border-outline-variant divide-y divide-outline-variant/30">
+<div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="category">category</span>
+<div>
+<p class="font-label-md text-label-md">Manage categories</p>
+<p class="font-label-sm text-label-sm text-outline">Edit transaction tags</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="payments">payments</span>
+<div>
+<p class="font-label-md text-label-md">Currency (₹)</p>
+<p class="font-label-sm text-label-sm text-outline">Indian Rupee</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div><div class="p-4 flex items-center justify-between hover:bg-primary/5 transition-colors duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="format_size">format_size</span>
+<div>
+<p class="font-label-md text-label-md">Text size</p>
+<p class="font-label-sm text-label-sm text-outline">Adjust for better readability</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-body-md text-outline">Aa</span>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="dark_mode">dark_mode</span>
+<div>
+<p class="font-label-md text-label-md">Dark mode</p>
+<p class="font-label-sm text-label-sm text-outline">Theme settings</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent outline-none transition-all duration-200 ease-in-out left-0 top-0" id="toggle-dark" name="toggle" type="checkbox">
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-200 ease-in-out after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all after:duration-200" for="toggle-dark"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="mt-stack-lg mb-stack-lg flex justify-center">
+<button class="px-8 py-3 rounded-full border-[0.5px] border-tertiary/20 text-tertiary font-label-md text-label-md hover:bg-tertiary/5 transition-colors active:scale-95 duration-150">
+                Log out
+            </button>
+</footer>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-surface-container-lowest border-t-[0.5px] border-outline-variant h-[56px] px-2 shadow-sm"><button class="flex flex-col items-center justify-center text-outline px-4 py-1 hover:bg-primary/5 transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline px-4 py-1 hover:bg-primary/5 transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-sm text-label-sm">Amount</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline px-4 py-1 hover:bg-primary/5 transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" data-icon="savings">savings</span>
+<span class="font-label-sm text-label-sm">Budget</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline px-4 py-1 hover:bg-primary/5 transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-sm text-label-sm">Analytics</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary bg-primary/5 rounded-xl px-4 py-1 transition-all duration-150 active:scale-95">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</button></nav>
+<script>
+        // Simple logic for the toggles (visual only)
+        document.querySelectorAll('.toggle-checkbox').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                if (this.checked) {
+                    label.classList.add('bg-primary');
+                    label.classList.remove('bg-outline-variant');
+                } else {
+                    label.classList.add('bg-outline-variant');
+                    label.classList.remove('bg-primary');
+                }
+            });
+            // Initial state check
+            if (toggle.checked) {
+                toggle.nextElementSibling.classList.add('bg-primary');
+                toggle.nextElementSibling.classList.remove('bg-outline-variant');
+            }
+        });
+
+        // Dark mode toggle simulation
+        const darkModeToggle = document.getElementById('toggle-dark');
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+
+</body></html>
