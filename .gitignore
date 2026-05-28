@@ -1,1 +1,49 @@
+# Android / Gradle
+*.iml
+.gradle/
+local.properties
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Java & Package Files
+*.jar
+*.war
+*.ear
+*.aar
+hs_err_pid*
+replay_pid*
+
+# Keystore files
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+secrets.properties
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Firebase
+# google-services.json contains API keys; keep out of source control
 google-services.json
+app/google-services.json
+
+# Misc
+*.orig.*
+.kotlin/

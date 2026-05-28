@@ -1,0 +1,147 @@
+package kabir.paisa.notifications
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kabir.paisa.amount.CategoryPickerSheet
+import kabir.paisa.common.formatRupees
+import kabir.paisa.common.relativeDayLabel
+import kabir.paisa.data.PaisaRepository
+import kabir.paisa.data.model.Transaction
+import kabir.paisa.ui.theme.PaisaColors
+
+@Composable
+fun TaggingScreen(onBack: () -> Unit) {
+    val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
+    val untagged = txs.filter { !it.isTagged && it.type == kabir.paisa.data.model.TransactionType.DEBIT }
+
+    var pickingFor by remember { mutableStateOf<Transaction?>(null) }
+
+    Scaffold(containerColor = PaisaColors.Background) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = padding.calculateBottomPadding())
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(PaisaColors.Primary)
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = PaisaColors.OnPrimary)
+                    }
+                    Spacer(Modifier.size(4.dp))
+                    Text("Tag transactions", color = PaisaColors.OnPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            item {
+                Spacer(Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .fillMaxWidth()
+                        .border(0.5.dp, PaisaColors.OutlineVariant, RoundedCornerShape(12.dp))
+                        .background(PaisaColors.SecondaryFixed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.AutoMirrored.Filled.HelpOutline, null, tint = PaisaColors.Primary)
+                        Spacer(Modifier.size(12.dp))
+                        Column {
+                            Text("${untagged.size} payments untagged", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text("Takes 30 seconds to clear", color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Text("UNTAGGED", color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 20.dp))
+                Spacer(Modifier.height(8.dp))
+            }
+            items(untagged) { tx ->
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp, vertical = 4.dp)
+                        .fillMaxWidth()
+                        .border(0.5.dp, PaisaColors.OutlineVariant, RoundedCornerShape(12.dp))
+                        .background(PaisaColors.SurfaceContainerLowest, RoundedCornerShape(12.dp))
+                        .clickable { pickingFor = tx }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(PaisaColors.SurfaceContainer, RoundedCornerShape(999.dp)),
+                            contentAlignment = Alignment.Center
+                        ) { Icon(Icons.AutoMirrored.Filled.HelpOutline, null, tint = PaisaColors.Outline) }
+                        Spacer(Modifier.size(12.dp))
+                        Column {
+                            Text("${formatRupees(tx.amount, withDecimals = false)} · ${tx.merchant}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                            Text(relativeDayLabel(tx.timestamp), color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Text("Tag →", color = PaisaColors.Primary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            if (untagged.isEmpty()) {
+                item {
+                    Text(
+                        "All caught up. Nothing to tag.",
+                        modifier = Modifier.padding(20.dp),
+                        color = PaisaColors.Outline
+                    )
+                }
+            }
+            item { Spacer(Modifier.size(24.dp)) }
+        }
+    }
+
+    pickingFor?.let { tx ->
+        CategoryPickerSheet(
+            onPick = { cat ->
+                PaisaRepository.tagTransaction(tx.id, cat.id)
+                pickingFor = null
+            },
+            onDismiss = { pickingFor = null }
+        )
+    }
+}
