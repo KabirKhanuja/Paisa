@@ -47,3 +47,5 @@ app/google-services.json
 # Misc
 *.orig.*
 .kotlin/
+
+serviceAccount.json
