@@ -41,8 +41,8 @@ import kabir.paisa.common.formatRupees
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
+import kabir.paisa.data.FixedExpense
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.FixedExpense
 import kabir.paisa.ui.theme.PaisaColors
 
 @Composable
@@ -51,11 +51,14 @@ fun BudgetOverviewScreen(
     onTab: (NavTab) -> Unit,
 ) {
     val budget by PaisaRepository.budget.collectAsStateWithLifecycle()
+    val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
 
-    val investments = budget.investments
-    val fixed = budget.totalFixed
-    val flex = budget.spendingCap.coerceAtLeast(0.0)
+    val investments = budget.investmentTarget
+    val fixed = budget.fixedExpenses.sumOf { it.amount }
+    val flex = budget.flexBudget.takeIf { it > 0 } ?: budget.spendingCap
     val total = (investments + fixed + flex).coerceAtLeast(1.0)
+    val monthSpent = txs.filter { it.type == PaisaRepository.TYPE_DEBIT }.sumOf { it.amount }
+    val ratio = if (flex > 0) (monthSpent / flex).coerceIn(0.0, 1.0).toFloat() else 0f
 
     Scaffold(
         containerColor = PaisaColors.Background,
@@ -86,7 +89,6 @@ fun BudgetOverviewScreen(
                 }
             }
             item {
-                // Investment locked pill
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.Center
@@ -144,10 +146,6 @@ fun BudgetOverviewScreen(
                 }
             }
             item {
-                // Flex progress
-                val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
-                val monthSpent = txs.filter { it.type == kabir.paisa.data.model.TransactionType.DEBIT }.sumOf { it.amount }
-                val ratio = if (flex > 0) (monthSpent / flex).coerceIn(0.0, 1.0).toFloat() else 0f
                 Column(
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
@@ -200,9 +198,7 @@ fun BudgetOverviewScreen(
             item {
                 Spacer(Modifier.height(16.dp))
                 Row(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -246,7 +242,7 @@ private fun Donut(
     centerLabel: String,
     centerValue: String,
 ) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    androidx.compose.foundation.layout.Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = 18f
             val padding = stroke / 2
@@ -291,7 +287,7 @@ private fun FixedExpenseRow(e: FixedExpense) {
                 modifier = Modifier.size(48.dp).background(PaisaColors.SurfaceContainer, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(iconForName(e.iconName), null, tint = PaisaColors.Primary)
+                Icon(iconForName(e.icon), null, tint = PaisaColors.Primary)
             }
             Spacer(Modifier.size(12.dp))
             Column {

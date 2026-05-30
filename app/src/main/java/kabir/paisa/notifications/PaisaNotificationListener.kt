@@ -4,8 +4,6 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionSource
 
 class PaisaNotificationListener : NotificationListenerService() {
 
@@ -23,14 +21,11 @@ class PaisaNotificationListener : NotificationListenerService() {
 
         val merchant = parsed.merchantHint ?: bankNameFromPackage(pkg) ?: "Bank"
         PaisaRepository.addTransaction(
-            Transaction(
-                merchant = merchant,
-                amount = parsed.amount,
-                type = parsed.type,
-                source = TransactionSource.AUTO,
-                categoryId = null, // untagged — surfaces in tagging flow
-                rawNotificationText = parsed.rawText,
-            )
+            amount = parsed.amount,
+            type = parsed.type,
+            category = "",            // untagged — surfaces in tagging flow
+            note = merchant,
+            source = PaisaRepository.SOURCE_AUTO,
         )
     }
 

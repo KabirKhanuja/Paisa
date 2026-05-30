@@ -41,12 +41,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kabir.paisa.common.ui.CategoryDef
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Categories
-import kabir.paisa.data.model.Category
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionSource
-import kabir.paisa.data.model.TransactionType
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
 
@@ -59,7 +55,7 @@ fun AmountEntryScreen(
     var isAdd by remember { mutableStateOf(initialIsAdd) }
     var amount by remember { mutableStateOf("0") }
     var description by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<Category?>(null) }
+    var selectedCategory by remember { mutableStateOf<CategoryDef?>(null) }
     var showCategoryPicker by remember { mutableStateOf(false) }
 
     fun append(ch: String) {
@@ -131,7 +127,6 @@ fun AmountEntryScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Amount display
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -149,7 +144,6 @@ fun AmountEntryScreen(
                 }
             }
 
-            // Description
             BasicTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -169,7 +163,6 @@ fun AmountEntryScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Category picker row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,7 +186,6 @@ fun AmountEntryScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Keypad
             val keys = listOf("1","2","3","4","5","6","7","8","9",".","0","⌫")
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -227,13 +219,11 @@ fun AmountEntryScreen(
                     val parsed = amount.toDoubleOrNull() ?: 0.0
                     if (parsed > 0) {
                         PaisaRepository.addTransaction(
-                            Transaction(
-                                merchant = description.ifBlank { if (isAdd) "Added" else "Spent" },
-                                amount = parsed,
-                                type = if (isAdd) TransactionType.CREDIT else TransactionType.DEBIT,
-                                source = TransactionSource.MANUAL,
-                                categoryId = selectedCategory?.id,
-                            )
+                            amount = parsed,
+                            type = if (isAdd) PaisaRepository.TYPE_CREDIT else PaisaRepository.TYPE_DEBIT,
+                            category = selectedCategory?.name ?: "",
+                            note = description.ifBlank { if (isAdd) "Added" else "Spent" },
+                            source = PaisaRepository.SOURCE_MANUAL,
                         )
                         onConfirmed()
                     }

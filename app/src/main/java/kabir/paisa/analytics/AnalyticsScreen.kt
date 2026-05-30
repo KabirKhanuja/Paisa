@@ -2,7 +2,6 @@ package kabir.paisa.analytics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,9 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,9 +36,6 @@ import kabir.paisa.common.formatRupees
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Categories
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionType
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
 import java.text.SimpleDateFormat
@@ -57,23 +50,23 @@ fun AnalyticsScreen(onTab: (NavTab) -> Unit) {
     val now = Calendar.getInstance()
     val monthLabel = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(now.time)
     val monthTxs = txs.filter {
-        val c = Calendar.getInstance().apply { time = it.timestamp }
+        val c = Calendar.getInstance().apply { time = it.date.toDate() }
         c.get(Calendar.MONTH) == now.get(Calendar.MONTH) &&
                 c.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-                it.type == TransactionType.DEBIT
+                it.type == PaisaRepository.TYPE_DEBIT
     }
     val monthSpent = monthTxs.sumOf { it.amount }
     val today = now.get(Calendar.DAY_OF_MONTH)
     val balanceToday = PaisaRepository.balanceAt(now.time)
 
     val byDay = monthTxs.groupBy {
-        Calendar.getInstance().apply { time = it.timestamp }.get(Calendar.DAY_OF_MONTH)
+        Calendar.getInstance().apply { time = it.date.toDate() }.get(Calendar.DAY_OF_MONTH)
     }.mapValues { it.value.sumOf { tx -> tx.amount } }
     val costliest = byDay.maxByOrNull { it.value }
     val avgPerDay = if (today > 0) monthSpent / today else 0.0
 
-    val byCategory = monthTxs.filter { it.categoryId != null }
-        .groupBy { it.categoryId!! }
+    val byCategory = monthTxs.filter { it.category.isNotBlank() }
+        .groupBy { it.category }
         .mapValues { it.value.sumOf { tx -> tx.amount } }
         .entries.sortedByDescending { it.value }
 
@@ -130,9 +123,7 @@ fun AnalyticsScreen(onTab: (NavTab) -> Unit) {
             item {
                 Spacer(Modifier.height(16.dp))
                 Row(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Column(
@@ -177,14 +168,13 @@ fun AnalyticsScreen(onTab: (NavTab) -> Unit) {
                     Text("WHERE IT WENT", color = PaisaColors.OnSurfaceVariant, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(16.dp))
                     val max = byCategory.firstOrNull()?.value ?: 1.0
-                    byCategory.forEachIndexed { idx, (catId, amount) ->
-                        val cat = Categories.byId(catId)
+                    byCategory.forEachIndexed { idx, (catName, amount) ->
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(cat?.name ?: "Other", color = PaisaColors.OnSurface, style = MaterialTheme.typography.labelLarge)
+                                Text(catName, color = PaisaColors.OnSurface, style = MaterialTheme.typography.labelLarge)
                                 Text(formatRupees(amount, withDecimals = false), color = PaisaColors.OnSurfaceVariant, style = MaterialTheme.typography.labelLarge)
                             }
                             Spacer(Modifier.height(4.dp))
@@ -245,7 +235,7 @@ private fun SpendCalendar(byDay: Map<Int, Double>, today: Int, monthlyMax: Doubl
     val cal = Calendar.getInstance()
     val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
     cal.set(Calendar.DAY_OF_MONTH, 1)
-    val firstDow = cal.get(Calendar.DAY_OF_WEEK) - 1 // 0=Sunday
+    val firstDow = cal.get(Calendar.DAY_OF_WEEK) - 1
 
     Column(
         modifier = Modifier

@@ -1,10 +1,10 @@
 package kabir.paisa.notifications
 
-import kabir.paisa.data.model.TransactionType
+import kabir.paisa.data.PaisaRepository
 
 data class ParsedTransaction(
     val amount: Double,
-    val type: TransactionType,
+    val type: String,        // PaisaRepository.TYPE_CREDIT / TYPE_DEBIT
     val merchantHint: String?,
     val rawText: String,
 )
@@ -18,13 +18,11 @@ object BankNotificationParser {
         "com.sbi.SBIFreedomPlus",
         "com.kotak.android.mob",
         "com.fss.pnb",
-        "in.cointab.cointabapp",
     )
 
     fun looksLikeBank(packageName: String?, text: String): Boolean {
         if (packageName == null) return false
         if (packageName in knownBankPackages) return true
-        // generic bank-ish notifications
         val l = text.lowercase()
         return ("a/c" in l || "acc" in l || "bank" in l) &&
                ("debited" in l || "credited" in l || "spent" in l || "received" in l || "rs." in l || "inr" in l || "₹" in l)
@@ -41,9 +39,9 @@ object BankNotificationParser {
         val amount = raw.toDoubleOrNull() ?: return null
         val l = text.lowercase()
         val type = when {
-            debitWords.any { it in l } -> TransactionType.DEBIT
-            creditWords.any { it in l } -> TransactionType.CREDIT
-            else -> TransactionType.DEBIT
+            debitWords.any { it in l } -> PaisaRepository.TYPE_DEBIT
+            creditWords.any { it in l } -> PaisaRepository.TYPE_CREDIT
+            else -> PaisaRepository.TYPE_DEBIT
         }
         val merchant = merchantRegex.find(text)?.groupValues?.get(1)?.trim()
         return ParsedTransaction(amount, type, merchant, text)

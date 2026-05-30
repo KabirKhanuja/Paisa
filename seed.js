@@ -76,8 +76,8 @@ async function seed() {
     month: '2026-05',
     totalCredit: 60000,
     totalDebit: 16800,
-    costiestDay: '2026-05-16',
-    costiestDayAmount: 3200,
+    costliestDay: '2026-05-16',
+    costliestDayAmount: 3200,
     avgDailySpend: 730,
     generatedAt: admin.firestore.Timestamp.now(),
     byCategory: {

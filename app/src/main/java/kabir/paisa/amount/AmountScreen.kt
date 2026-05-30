@@ -32,14 +32,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.dayGroupKey
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.formatTime
+import kabir.paisa.common.ui.CategoryDefs
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Categories
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionSource
-import kabir.paisa.data.model.TransactionType
+import kabir.paisa.data.Transaction
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
 
@@ -104,7 +102,7 @@ fun AmountScreen(
                 }
             }
 
-            val grouped = txs.groupBy { dayGroupKey(it.timestamp) }
+            val grouped = txs.groupBy { dayGroupKey(it.date) }
             grouped.forEach { (group, items) ->
                 item {
                     Row(
@@ -135,7 +133,9 @@ fun AmountScreen(
 
 @Composable
 private fun AmountTxRow(tx: Transaction) {
-    val cat = Categories.byId(tx.categoryId)
+    val cat = CategoryDefs.byName(tx.category)
+    val isCredit = tx.type == PaisaRepository.TYPE_CREDIT
+    val displayName = if (tx.note.isNotBlank()) tx.note else if (isCredit) "Credit" else "Debit"
     Row(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -151,22 +151,21 @@ private fun AmountTxRow(tx: Transaction) {
                 modifier = Modifier
                     .size(48.dp)
                     .background(
-                        if (tx.type == TransactionType.CREDIT) PaisaColors.PrimaryFixedDim
-                        else PaisaColors.SecondaryContainer.copy(alpha = 0.3f),
+                        if (isCredit) PaisaColors.PrimaryFixedDim else PaisaColors.SecondaryContainer.copy(alpha = 0.3f),
                         RoundedCornerShape(999.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    iconForName(cat?.iconName ?: if (tx.type == TransactionType.CREDIT) "payments" else "shopping_bag"),
+                    iconForName(cat?.iconName ?: if (isCredit) "payments" else "shopping_bag"),
                     null,
-                    tint = if (tx.type == TransactionType.CREDIT) PaisaColors.Primary else PaisaColors.Secondary
+                    tint = if (isCredit) PaisaColors.Primary else PaisaColors.Secondary
                 )
             }
             Spacer(Modifier.size(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(tx.merchant, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.size(8.dp))
                     SourceBadge(tx.source)
                 }
@@ -181,13 +180,13 @@ private fun AmountTxRow(tx: Transaction) {
                         }
                         Spacer(Modifier.size(8.dp))
                     }
-                    Text(formatTime(tx.timestamp), color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
+                    Text(formatTime(tx.date), color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
         Text(
-            (if (tx.type == TransactionType.CREDIT) "+" else "-") + formatRupees(tx.amount),
-            color = if (tx.type == TransactionType.CREDIT) PaisaColors.Primary else PaisaColors.Tertiary,
+            (if (isCredit) "+" else "-") + formatRupees(tx.amount),
+            color = if (isCredit) PaisaColors.Primary else PaisaColors.Tertiary,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         )
@@ -195,8 +194,9 @@ private fun AmountTxRow(tx: Transaction) {
 }
 
 @Composable
-private fun SourceBadge(source: TransactionSource) {
-    val (bg, fg, label) = if (source == TransactionSource.AUTO)
+private fun SourceBadge(source: String) {
+    val isAuto = source == PaisaRepository.SOURCE_AUTO
+    val (bg, fg, label) = if (isAuto)
         Triple(PaisaColors.PrimaryFixed, PaisaColors.OnPrimaryFixed, "AUTO")
     else
         Triple(PaisaColors.SurfaceContainerHigh, PaisaColors.Outline, "MANUAL")

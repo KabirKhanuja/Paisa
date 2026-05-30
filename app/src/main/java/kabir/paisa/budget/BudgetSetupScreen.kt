@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalanceWallet
@@ -46,18 +46,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.ui.iconForName
+import kabir.paisa.data.Budget
+import kabir.paisa.data.FixedExpense
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Budget
-import kabir.paisa.data.model.FixedExpense
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
-import java.util.UUID
 
 @Composable
 fun BudgetSetupScreen(onDone: () -> Unit) {
     val budget by PaisaRepository.budget.collectAsStateWithLifecycle()
 
-    var income by remember { mutableStateOf(budget.monthlyIncome.toLong().toString()) }
+    var salary by remember { mutableStateOf(budget.salary.toLong().toString()) }
     var cap by remember { mutableStateOf(budget.spendingCap.toLong().toString()) }
     val expenses = remember { mutableStateListOf<FixedExpense>().apply { addAll(budget.fixedExpenses) } }
     var newExpenseName by remember { mutableStateOf("") }
@@ -65,10 +64,10 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
     var showAddRow by remember { mutableStateOf(false) }
 
     val totalFixed = expenses.sumOf { it.amount }
-    val incomeVal = income.toDoubleOrNull() ?: 0.0
+    val salaryVal = salary.toDoubleOrNull() ?: 0.0
     val capVal = cap.toDoubleOrNull() ?: 0.0
-    val flexRemaining = (incomeVal - totalFixed).coerceAtLeast(0.0)
-    val investments = (incomeVal - totalFixed - capVal).coerceAtLeast(0.0)
+    val flexRemaining = (salaryVal - totalFixed).coerceAtLeast(0.0)
+    val investments = (salaryVal - totalFixed - capVal).coerceAtLeast(0.0)
 
     Column(
         modifier = Modifier
@@ -99,9 +98,8 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Income
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Monthly Income", color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge)
+                Text("Monthly Salary", color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,8 +111,8 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                         Text("₹", style = PaisaTextStyles.AmountDisplay, color = PaisaColors.Primary)
                         Spacer(Modifier.size(4.dp))
                         BasicTextField(
-                            value = income,
-                            onValueChange = { income = it.filter { ch -> ch.isDigit() } },
+                            value = salary,
+                            onValueChange = { salary = it.filter { ch -> ch.isDigit() } },
                             textStyle = PaisaTextStyles.AmountDisplay.copy(color = PaisaColors.OnSurface),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
@@ -125,7 +123,6 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                 }
             }
 
-            // Fixed expenses
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -150,7 +147,7 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                                 modifier = Modifier.size(40.dp).background(PaisaColors.SecondaryFixed, RoundedCornerShape(999.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(iconForName(e.iconName), null, tint = PaisaColors.OnSecondaryFixedVariant)
+                                Icon(iconForName(e.icon), null, tint = PaisaColors.OnSecondaryFixedVariant)
                             }
                             Spacer(Modifier.size(12.dp))
                             Text(e.name, color = PaisaColors.OnSurface)
@@ -200,7 +197,7 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                                     .clickable {
                                         val amt = newExpenseAmount.toDoubleOrNull() ?: 0.0
                                         if (newExpenseName.isNotBlank() && amt > 0) {
-                                            expenses.add(FixedExpense(UUID.randomUUID().toString(), newExpenseName.trim(), amt))
+                                            expenses.add(FixedExpense(newExpenseName.trim(), amt, ""))
                                             newExpenseName = ""; newExpenseAmount = ""; showAddRow = false
                                         }
                                     }
@@ -232,7 +229,6 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                 }
             }
 
-            // Cap
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Spending Cap (Optional)", color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge)
                 Row(
@@ -259,7 +255,6 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                 }
             }
 
-            // Flex banner
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -282,13 +277,14 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                 }
             }
 
-            // Confirm
             Button(
                 onClick = {
                     PaisaRepository.updateBudget(
                         Budget(
-                            monthlyIncome = incomeVal,
+                            salary = salaryVal,
                             spendingCap = capVal,
+                            investmentTarget = investments,
+                            flexBudget = capVal,
                             fixedExpenses = expenses.toList(),
                         )
                     )

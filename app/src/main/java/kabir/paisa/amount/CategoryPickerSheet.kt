@@ -3,7 +3,6 @@ package kabir.paisa.amount
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,14 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kabir.paisa.data.model.Categories
-import kabir.paisa.data.model.Category
+import kabir.paisa.common.ui.CategoryDef
+import kabir.paisa.common.ui.CategoryDefs
 import kabir.paisa.ui.theme.PaisaColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryPickerSheet(
-    onPick: (Category) -> Unit,
+    onPick: (CategoryDef) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -57,7 +56,7 @@ fun CategoryPickerSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth().height(360.dp)
             ) {
-                items(Categories.Defaults) { cat ->
+                items(CategoryDefs.All) { cat ->
                     Column(
                         modifier = Modifier
                             .background(PaisaColors.SurfaceContainerLow, RoundedCornerShape(14.dp))

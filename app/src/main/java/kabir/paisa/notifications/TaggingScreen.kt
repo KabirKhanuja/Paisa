@@ -38,13 +38,13 @@ import kabir.paisa.amount.CategoryPickerSheet
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.relativeDayLabel
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Transaction
+import kabir.paisa.data.Transaction
 import kabir.paisa.ui.theme.PaisaColors
 
 @Composable
 fun TaggingScreen(onBack: () -> Unit) {
     val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
-    val untagged = txs.filter { !it.isTagged && it.type == kabir.paisa.data.model.TransactionType.DEBIT }
+    val untagged = txs.filter { it.category.isBlank() && it.type == PaisaRepository.TYPE_DEBIT }
 
     var pickingFor by remember { mutableStateOf<Transaction?>(null) }
 
@@ -115,8 +115,9 @@ fun TaggingScreen(onBack: () -> Unit) {
                         ) { Icon(Icons.AutoMirrored.Filled.HelpOutline, null, tint = PaisaColors.Outline) }
                         Spacer(Modifier.size(12.dp))
                         Column {
-                            Text("${formatRupees(tx.amount, withDecimals = false)} · ${tx.merchant}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                            Text(relativeDayLabel(tx.timestamp), color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
+                            val label = if (tx.note.isNotBlank()) tx.note else "Transaction"
+                            Text("${formatRupees(tx.amount, withDecimals = false)} · $label", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                            Text(relativeDayLabel(tx.date), color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     Text("Tag →", color = PaisaColors.Primary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
@@ -138,7 +139,7 @@ fun TaggingScreen(onBack: () -> Unit) {
     pickingFor?.let { tx ->
         CategoryPickerSheet(
             onPick = { cat ->
-                PaisaRepository.tagTransaction(tx.id, cat.id)
+                PaisaRepository.tagTransaction(tx.id, cat.name)
                 pickingFor = null
             },
             onDismiss = { pickingFor = null }

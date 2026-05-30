@@ -1,12 +1,8 @@
 package kabir.paisa.data
 
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kabir.paisa.data.model.Budget
-import kabir.paisa.data.model.FixedExpense
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionSource
-import kabir.paisa.data.model.TransactionType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,10 +11,15 @@ import java.util.Date
 import java.util.UUID
 
 /**
- * In-memory single source of truth for the UI. Hooks for Firestore are present
- * but writes are best-effort — UI never blocks on them.
+ * In-memory single source of truth for the UI, with best-effort Firestore write-through.
+ * All models are Firestore-schema models — no domain/UI mapping layer.
  */
 object PaisaRepository {
+
+    const val TYPE_CREDIT = "credit"
+    const val TYPE_DEBIT = "debit"
+    const val SOURCE_AUTO = "auto"
+    const val SOURCE_MANUAL = "manual"
 
     private val _transactions = MutableStateFlow(seedTransactions())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
@@ -32,44 +33,65 @@ object PaisaRepository {
     val balance: Double
         get() = _startingBalance.value + _transactions.value.sumOf { it.signedAmount }
 
-    fun addTransaction(t: Transaction) {
-        _transactions.value = (listOf(t) + _transactions.value).sortedByDescending { it.timestamp }
-        pushToFirestore(t)
+    /** Append a new transaction, computing [Transaction.balanceAfter] from current state. */
+    fun addTransaction(
+        amount: Double,
+        type: String,
+        category: String,
+        note: String,
+        source: String,
+        date: Timestamp = Timestamp.now(),
+        id: String = UUID.randomUUID().toString(),
+    ): Transaction {
+        val newBalance = balance + signFor(type) * amount
+        val tx = Transaction(
+            id = id,
+            amount = amount,
+            type = type,
+            category = category,
+            note = note,
+            source = source,
+            date = date,
+            balanceAfter = newBalance,
+        )
+        _transactions.value = (listOf(tx) + _transactions.value).sortedByDescending { it.date.seconds }
+        pushTransaction(tx)
+        return tx
     }
 
-    fun tagTransaction(id: String, categoryId: String, note: String? = null) {
+    fun tagTransaction(id: String, category: String, note: String? = null) {
         _transactions.value = _transactions.value.map {
-            if (it.id == id) it.copy(categoryId = categoryId, note = note ?: it.note) else it
+            if (it.id == id) it.copy(category = category, note = note ?: it.note) else it
         }
-        // push update best-effort
-        firestoreUserDoc()?.collection("transactions")?.document(id)
-            ?.update(mapOf("categoryId" to categoryId, "note" to note))
+        val updates = mutableMapOf<String, Any>("category" to category)
+        if (note != null) updates["note"] = note
+        firestoreUserDoc()?.collection("transactions")?.document(id)?.update(updates)
     }
 
     fun updateBudget(b: Budget) {
         _budget.value = b
-        firestoreUserDoc()?.collection("meta")?.document("budget")?.set(
+        firestoreUserDoc()?.collection("budget")?.document(currentMonthKey())?.set(
             mapOf(
-                "monthlyIncome" to b.monthlyIncome,
+                "salary" to b.salary,
                 "spendingCap" to b.spendingCap,
+                "investmentTarget" to b.investmentTarget,
+                "flexBudget" to b.flexBudget,
                 "fixedExpenses" to b.fixedExpenses.map { e ->
-                    mapOf("id" to e.id, "name" to e.name, "amount" to e.amount, "iconName" to e.iconName)
+                    mapOf("name" to e.name, "amount" to e.amount, "icon" to e.icon)
                 }
             )
         )
     }
 
-    fun setStartingBalance(amount: Double) {
-        _startingBalance.value = amount
-    }
+    fun setStartingBalance(amount: Double) { _startingBalance.value = amount }
 
-    fun untaggedTransactions(): List<Transaction> =
-        _transactions.value.filter { !it.isTagged && it.type == TransactionType.DEBIT }
+    fun untaggedDebits(): List<Transaction> =
+        _transactions.value.filter { it.category.isBlank() && it.type == TYPE_DEBIT }
 
     fun balanceAt(date: Date): Double {
-        val cutoff = endOfDay(date)
+        val cutoff = endOfDay(date).time / 1000
         return _startingBalance.value + _transactions.value
-            .filter { it.timestamp <= cutoff }
+            .filter { it.date.seconds <= cutoff }
             .sumOf { it.signedAmount }
     }
 
@@ -81,20 +103,11 @@ object PaisaRepository {
         return c.time
     }
 
-    private fun pushToFirestore(t: Transaction) {
+    private fun signFor(type: String): Int = if (type == TYPE_DEBIT) -1 else 1
+
+    private fun pushTransaction(tx: Transaction) {
         val doc = firestoreUserDoc() ?: return
-        doc.collection("transactions").document(t.id).set(
-            mapOf(
-                "merchant" to t.merchant,
-                "amount" to t.amount,
-                "type" to t.type.name,
-                "source" to t.source.name,
-                "categoryId" to t.categoryId,
-                "note" to t.note,
-                "timestamp" to t.timestamp,
-                "rawNotificationText" to t.rawNotificationText,
-            )
-        )
+        doc.collection("transactions").document(tx.id).set(tx)
     }
 
     private fun firestoreUserDoc() =
@@ -102,44 +115,58 @@ object PaisaRepository {
             FirebaseFirestore.getInstance().collection("users").document(uid)
         }
 
+    private fun currentMonthKey(): String {
+        val c = Calendar.getInstance()
+        return "%04d-%02d".format(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1)
+    }
+
     // ----- seed data so the app shows realistic content immediately -----
 
     private fun seedTransactions(): List<Transaction> {
         val now = Calendar.getInstance()
-        fun at(daysAgo: Int, hour: Int, minute: Int): Date {
+        fun at(daysAgo: Int, hour: Int, minute: Int): Timestamp {
             val c = now.clone() as Calendar
             c.add(Calendar.DAY_OF_YEAR, -daysAgo)
             c.set(Calendar.HOUR_OF_DAY, hour); c.set(Calendar.MINUTE, minute); c.set(Calendar.SECOND, 0)
-            return c.time
+            return Timestamp(c.time)
         }
+        fun mk(amount: Double, type: String, category: String, note: String, source: String, ts: Timestamp) =
+            Transaction(UUID.randomUUID().toString(), amount, type, category, note, source, ts, balanceAfter = 0.0)
+
         return listOf(
-            Transaction(UUID.randomUUID().toString(), "Zomato", 620.0, TransactionType.DEBIT,
-                TransactionSource.MANUAL, "food", null, at(0, 12, 45)),
-            Transaction(UUID.randomUUID().toString(), "Amazon", 2_100.0, TransactionType.DEBIT,
-                TransactionSource.AUTO, "shopping", null, at(0, 10, 30)),
-            Transaction(UUID.randomUUID().toString(), "Petrol", 1_500.0, TransactionType.DEBIT,
-                TransactionSource.MANUAL, "petrol", null, at(1, 17, 15)),
-            Transaction(UUID.randomUUID().toString(), "Electricity Bill", 3_400.0, TransactionType.DEBIT,
-                TransactionSource.AUTO, "bills", null, at(1, 9, 0)),
-            Transaction(UUID.randomUUID().toString(), "Salary", 85_000.0, TransactionType.CREDIT,
-                TransactionSource.AUTO, "salary", null, at(4, 10, 0)),
-            Transaction(UUID.randomUUID().toString(), "Axis Bank", 340.0, TransactionType.DEBIT,
-                TransactionSource.AUTO, null, null, at(0, 9, 38),
-                rawNotificationText = "A/c XX4321 debited ₹340.00. Avl Bal ₹42,240.00"),
-            Transaction(UUID.randomUUID().toString(), "Axis Bank", 1_200.0, TransactionType.DEBIT,
-                TransactionSource.AUTO, null, null, at(1, 20, 12)),
-            Transaction(UUID.randomUUID().toString(), "Axis Bank", 180.0, TransactionType.DEBIT,
-                TransactionSource.AUTO, null, null, at(2, 18, 45)),
-        ).sortedByDescending { it.timestamp }
+            mk(620.0, TYPE_DEBIT, "Food", "Zomato", SOURCE_MANUAL, at(0, 12, 45)),
+            mk(2_100.0, TYPE_DEBIT, "Shopping", "Amazon", SOURCE_AUTO, at(0, 10, 30)),
+            mk(1_500.0, TYPE_DEBIT, "Petrol", "Petrol", SOURCE_MANUAL, at(1, 17, 15)),
+            mk(3_400.0, TYPE_DEBIT, "Bills", "Electricity Bill", SOURCE_AUTO, at(1, 9, 0)),
+            mk(85_000.0, TYPE_CREDIT, "Income", "Salary", SOURCE_AUTO, at(4, 10, 0)),
+            mk(340.0, TYPE_DEBIT, "", "Axis Bank", SOURCE_AUTO, at(0, 9, 38)),
+            mk(1_200.0, TYPE_DEBIT, "", "Axis Bank", SOURCE_AUTO, at(1, 20, 12)),
+            mk(180.0, TYPE_DEBIT, "", "Axis Bank", SOURCE_AUTO, at(2, 18, 45)),
+        ).sortedByDescending { it.date.seconds }
     }
 
-    private fun seedBudget() = Budget(
-        monthlyIncome = 125_000.0,
-        spendingCap = 85_000.0,
-        fixedExpenses = listOf(
-            FixedExpense("claude", "Claude", 2_251.0, "smart_toy"),
-            FixedExpense("music", "Music", 4_800.0, "music_note"),
-            FixedExpense("petrol", "Petrol", 600.0, "local_gas_station"),
+    private fun seedBudget(): Budget {
+        val salary = 125_000.0
+        val cap = 85_000.0
+        val fixed = listOf(
+            FixedExpense("Claude", 2_251.0, "robot"),
+            FixedExpense("Music", 4_800.0, "music"),
+            FixedExpense("Petrol", 600.0, "car"),
         )
-    )
+        val totalFixed = fixed.sumOf { it.amount }
+        val investment = (salary - totalFixed - cap).coerceAtLeast(0.0)
+        return Budget(
+            salary = salary,
+            spendingCap = cap,
+            investmentTarget = investment,
+            flexBudget = cap,
+            fixedExpenses = fixed,
+        )
+    }
 }
+
+val Transaction.signedAmount: Double
+    get() = if (type == PaisaRepository.TYPE_DEBIT) -amount else amount
+
+val Transaction.isTagged: Boolean
+    get() = category.isNotBlank()

@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,13 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.relativeDayLabel
+import kabir.paisa.common.ui.CategoryDefs
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
 import kabir.paisa.data.PaisaRepository
-import kabir.paisa.data.model.Categories
-import kabir.paisa.data.model.Transaction
-import kabir.paisa.data.model.TransactionType
+import kabir.paisa.data.Transaction
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
 import java.util.Calendar
@@ -184,7 +182,6 @@ private fun HomeHero(balance: Double, leftToSpend: Double, cap: Double, spent: D
             )
         }
         Spacer(Modifier.height(8.dp))
-        // Progress bar
         val pct = if (cap > 0) (spent / cap).coerceIn(0.0, 1.0).toFloat() else 0f
         Box(
             modifier = Modifier
@@ -216,7 +213,9 @@ private fun HomeHero(balance: Double, leftToSpend: Double, cap: Double, spent: D
 
 @Composable
 fun TransactionRow(tx: Transaction) {
-    val category = Categories.byId(tx.categoryId)
+    val cat = CategoryDefs.byName(tx.category)
+    val isCredit = tx.type == PaisaRepository.TYPE_CREDIT
+    val displayName = if (tx.note.isNotBlank()) tx.note else if (isCredit) "Credit" else "Debit"
     Row(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -232,29 +231,28 @@ fun TransactionRow(tx: Transaction) {
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        if (tx.type == TransactionType.CREDIT) PaisaColors.PrimaryFixedDim
-                        else PaisaColors.SurfaceContainer,
+                        if (isCredit) PaisaColors.PrimaryFixedDim else PaisaColors.SurfaceContainer,
                         RoundedCornerShape(12.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    iconForName(category?.iconName ?: if (tx.type == TransactionType.CREDIT) "payments" else "shopping_bag"),
+                    iconForName(cat?.iconName ?: if (isCredit) "payments" else "shopping_bag"),
                     contentDescription = null,
-                    tint = if (tx.type == TransactionType.CREDIT) PaisaColors.Primary else PaisaColors.OnSurfaceVariant
+                    tint = if (isCredit) PaisaColors.Primary else PaisaColors.OnSurfaceVariant
                 )
             }
             Spacer(Modifier.size(16.dp))
             Column {
-                Text(tx.merchant, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = PaisaColors.OnSurface)
-                Text(relativeDayLabel(tx.timestamp), style = MaterialTheme.typography.labelSmall, color = PaisaColors.Outline)
+                Text(displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = PaisaColors.OnSurface)
+                Text(relativeDayLabel(tx.date), style = MaterialTheme.typography.labelSmall, color = PaisaColors.Outline)
             }
         }
         Text(
-            (if (tx.type == TransactionType.CREDIT) "+ " else "- ") + formatRupees(tx.amount),
+            (if (isCredit) "+ " else "- ") + formatRupees(tx.amount),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = if (tx.type == TransactionType.CREDIT) PaisaColors.Primary else PaisaColors.Tertiary
+            color = if (isCredit) PaisaColors.Primary else PaisaColors.Tertiary
         )
     }
 }
@@ -278,7 +276,6 @@ private fun MonthGlanceCard(credit: Double, debit: Double) {
             Icon(Icons.Filled.Info, null, tint = PaisaColors.Outline, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.height(12.dp))
-        // bar chart: 4 weeks
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -315,11 +312,11 @@ private fun MonthGlanceCard(credit: Double, debit: Double) {
 
 @Composable
 private fun TopCategoryCard(txs: List<Transaction>, monthlyLimit: Double) {
-    val spendByCategory = txs.filter { it.type == TransactionType.DEBIT && it.categoryId != null }
-        .groupBy { it.categoryId!! }
+    val spendByCategory = txs.filter { it.type == PaisaRepository.TYPE_DEBIT && it.category.isNotBlank() }
+        .groupBy { it.category }
         .mapValues { it.value.sumOf { tx -> tx.amount } }
     val topEntry = spendByCategory.maxByOrNull { it.value } ?: return
-    val cat = Categories.byId(topEntry.key) ?: return
+    val cat = CategoryDefs.byName(topEntry.key) ?: CategoryDefs.byName("Other") ?: return
     val pct = (topEntry.value / monthlyLimit).coerceIn(0.0, 1.0).toFloat()
 
     Column(
@@ -373,8 +370,8 @@ private fun monthSpent(txs: List<Transaction>): Double {
     val now = Calendar.getInstance()
     val month = now.get(Calendar.MONTH); val year = now.get(Calendar.YEAR)
     return txs.filter {
-        val c = Calendar.getInstance().apply { time = it.timestamp }
-        c.get(Calendar.MONTH) == month && c.get(Calendar.YEAR) == year && it.type == TransactionType.DEBIT
+        val c = Calendar.getInstance().apply { time = it.date.toDate() }
+        c.get(Calendar.MONTH) == month && c.get(Calendar.YEAR) == year && it.type == PaisaRepository.TYPE_DEBIT
     }.sumOf { it.amount }
 }
 
@@ -382,7 +379,7 @@ private fun monthCredit(txs: List<Transaction>): Double {
     val now = Calendar.getInstance()
     val month = now.get(Calendar.MONTH); val year = now.get(Calendar.YEAR)
     return txs.filter {
-        val c = Calendar.getInstance().apply { time = it.timestamp }
-        c.get(Calendar.MONTH) == month && c.get(Calendar.YEAR) == year && it.type == TransactionType.CREDIT
+        val c = Calendar.getInstance().apply { time = it.date.toDate() }
+        c.get(Calendar.MONTH) == month && c.get(Calendar.YEAR) == year && it.type == PaisaRepository.TYPE_CREDIT
     }.sumOf { it.amount }
 }
