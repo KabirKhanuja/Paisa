@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,98 +68,133 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = PaisaColors.Background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = { PaisaBottomNav(NavTab.Settings, onTab) }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = padding.calculateBottomPadding())
+                .padding(padding),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            // Profile header
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PaisaColors.Primary)
-                    .padding(top = 48.dp, bottom = 40.dp, start = 20.dp, end = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
+            item {
+                Column(
                     modifier = Modifier
-                        .size(64.dp)
-                        .background(PaisaColors.SurfaceContainerLowest, CircleShape)
-                        .border(0.5.dp, PaisaColors.OutlineVariant, CircleShape),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .background(PaisaColors.Primary)
+                        .statusBarsPadding()
+                        .padding(top = 32.dp, bottom = 32.dp, start = 20.dp, end = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        (email?.firstOrNull()?.uppercase() ?: "P"),
-                        color = PaisaColors.Primary,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(PaisaColors.SurfaceContainerLowest, CircleShape)
+                            .border(0.5.dp, PaisaColors.OutlineVariant, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            email?.firstOrNull()?.uppercase() ?: "P",
+                            color = PaisaColors.Primary,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+                    Spacer(Modifier.size(12.dp))
+                    Text("Paisa", color = PaisaColors.OnPrimary, style = MaterialTheme.typography.titleLarge)
+                    Text(email ?: "Not signed in", color = PaisaColors.OnPrimaryContainer, style = MaterialTheme.typography.labelLarge)
                 }
-                Spacer(Modifier.size(12.dp))
-                Text("Paisa", color = PaisaColors.OnPrimary, style = MaterialTheme.typography.titleLarge)
-                Text(email ?: "Not signed in", color = PaisaColors.OnPrimaryContainer, style = MaterialTheme.typography.labelLarge)
             }
 
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                Section("BANK") {
+            item { Spacer(Modifier.height(24.dp)) }
+
+            item {
+                Section(title = "BANK") {
                     SettingRow(Icons.Filled.AccountBalance, "Connected bank", "Tap to configure")
+                    SettingDivider()
                     SettingRow(Icons.Filled.SyncAlt, "Change bank", "Update connection")
+                    SettingDivider()
                     SettingRow(Icons.Filled.AddCard, "Set starting balance", "Initial wallet state")
                 }
-                Section("PERMISSIONS") {
+            }
+
+            item { Spacer(Modifier.height(16.dp)) }
+
+            item {
+                Section(title = "PERMISSIONS") {
                     SettingToggleRow(
-                        Icons.Filled.Notifications,
-                        "Notifications",
-                        if (notificationsOn) "Transaction listener: on" else "Tap to grant listener access",
+                        icon = Icons.Filled.Notifications,
+                        title = "Notifications",
+                        subtitle = if (notificationsOn) "Transaction listener: on" else "Tap to grant listener access",
                         checked = notificationsOn,
                         onChange = {
-                            // Open system settings; the listener flag is read from the system.
                             ctx.startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
                             notificationsOn = isListenerEnabled(ctx)
                         }
                     )
                 }
-                Section("PREFERENCES") {
+            }
+
+            item { Spacer(Modifier.height(16.dp)) }
+
+            item {
+                Section(title = "PREFERENCES") {
                     SettingRow(Icons.Filled.Category, "Manage categories", "Edit transaction tags")
+                    SettingDivider()
                     SettingRow(Icons.Filled.Payments, "Currency (₹)", "Indian Rupee")
+                    SettingDivider()
                     SettingRow(Icons.Filled.FormatSize, "Text size", "Adjust for better readability")
+                    SettingDivider()
                     SettingToggleRow(
-                        Icons.Filled.DarkMode,
-                        "Dark mode",
-                        "Theme settings",
+                        icon = Icons.Filled.DarkMode,
+                        title = "Dark mode",
+                        subtitle = "Theme settings",
                         checked = darkMode,
                         onChange = { darkMode = it }
                     )
                 }
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            }
+
+            item { Spacer(Modifier.height(24.dp)) }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     OutlinedButton(
                         onClick = {
                             AuthRepository.signOut()
                             onSignedOut()
                         },
-                        shape = RoundedCornerShape(999.dp)
+                        shape = RoundedCornerShape(999.dp),
                     ) {
                         Text("Log out", color = PaisaColors.Tertiary, fontWeight = FontWeight.Medium)
                     }
                 }
             }
+
+            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 }
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    Column {
-        Text(title, color = PaisaColors.Outline, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 4.dp, bottom = 12.dp))
+    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+        Text(
+            text = title,
+            color = PaisaColors.Outline,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp),
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(0.5.dp, PaisaColors.OutlineVariant, RoundedCornerShape(14.dp))
-                .background(PaisaColors.SurfaceContainerLowest, RoundedCornerShape(14.dp))
+                .background(PaisaColors.SurfaceContainerLowest, RoundedCornerShape(14.dp)),
         ) {
             content()
         }
@@ -163,11 +202,21 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
+private fun SettingDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(0.5.dp)
+            .background(PaisaColors.OutlineVariant.copy(alpha = 0.3f))
+    )
+}
+
+@Composable
 private fun SettingRow(icon: ImageVector, title: String, subtitle: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* hookup as needed */ }
+            .clickable { /* TODO: hook each row */ }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

@@ -1,5 +1,7 @@
 package kabir.paisa.nav
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -49,7 +51,14 @@ fun PaisaNavHost(nav: NavHostController = rememberNavController()) {
         }
     }
 
-    NavHost(navController = nav, startDestination = startDestination) {
+    NavHost(
+        navController = nav,
+        startDestination = startDestination,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
+    ) {
         composable(Routes.Auth) {
             AuthScreen(onSignedIn = {
                 nav.navigate(Routes.Home) { popUpTo(Routes.Auth) { inclusive = true } }

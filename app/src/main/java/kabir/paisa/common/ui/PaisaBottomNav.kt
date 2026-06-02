@@ -6,10 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,21 +42,29 @@ fun PaisaBottomNav(
     current: NavTab,
     onSelect: (NavTab) -> Unit,
 ) {
-    Row(
+    // Background extends to the bottom edge (under the gesture bar); the row
+    // of buttons sits above the system nav inset via navigationBarsPadding.
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(PaisaColors.SurfaceContainerLowest)
-            .border(width = 0.5.dp, color = PaisaColors.OutlineVariant)
-            .height(64.dp)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround
+            .navigationBarsPadding()
     ) {
-        NavItem(NavTab.Home, current, Icons.Filled.Home, Icons.Outlined.Home, onSelect)
-        NavItem(NavTab.Amount, current, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, onSelect)
-        NavItem(NavTab.Budget, current, Icons.Filled.Savings, Icons.Outlined.Savings, onSelect)
-        NavItem(NavTab.Analytics, current, Icons.Filled.QueryStats, Icons.Outlined.QueryStats, onSelect)
-        NavItem(NavTab.Settings, current, Icons.Filled.Settings, Icons.Outlined.Settings, onSelect)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(width = 0.5.dp, color = PaisaColors.OutlineVariant)
+                .height(64.dp)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            NavItem(NavTab.Home, current, Icons.Filled.Home, Icons.Outlined.Home, onSelect)
+            NavItem(NavTab.Amount, current, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, onSelect)
+            NavItem(NavTab.Budget, current, Icons.Filled.Savings, Icons.Outlined.Savings, onSelect)
+            NavItem(NavTab.Analytics, current, Icons.Filled.QueryStats, Icons.Outlined.QueryStats, onSelect)
+            NavItem(NavTab.Settings, current, Icons.Filled.Settings, Icons.Outlined.Settings, onSelect)
+        }
     }
 }
 
