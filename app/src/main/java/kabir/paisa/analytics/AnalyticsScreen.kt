@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.formatRupees
+import kabir.paisa.common.ui.EmptyState
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.data.PaisaRepository
@@ -45,6 +48,10 @@ import java.util.Locale
 
 @Composable
 fun AnalyticsScreen(onTab: (NavTab) -> Unit) {
+    // One-shot reload on entry so analytics is fresh on every tab switch,
+    // independent of the always-on snapshot listener.
+    LaunchedEffect(Unit) { PaisaRepository.refreshAnalytics() }
+
     val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
 
     val now = Calendar.getInstance()
@@ -99,6 +106,17 @@ fun AnalyticsScreen(onTab: (NavTab) -> Unit) {
                         Icon(Icons.Outlined.Notifications, null, tint = PaisaColors.OnPrimary)
                     }
                 }
+            }
+            if (monthTxs.isEmpty()) {
+                item {
+                    Spacer(Modifier.height(24.dp))
+                    EmptyState(
+                        icon = Icons.Filled.QueryStats,
+                        title = "No spending this month yet",
+                        subtitle = "Once transactions come in, you'll see your calendar, costliest day and category breakdown here.",
+                    )
+                }
+                return@LazyColumn
             }
             item {
                 Spacer(Modifier.height(16.dp))

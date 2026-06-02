@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.relativeDayLabel
 import kabir.paisa.common.ui.CategoryDefs
+import kabir.paisa.common.ui.EmptyState
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
@@ -53,8 +55,9 @@ fun HomeScreen(
 
     val monthSpent = monthSpent(txs)
     val monthCredit = monthCredit(txs)
-    val cap = if (budget.spendingCap > 0) budget.spendingCap else 15_000.0
+    val cap = budget.spendingCap
     val leftToSpend = (cap - monthSpent).coerceAtLeast(0.0)
+    val hasBudget = cap > 0
 
     Scaffold(
         containerColor = PaisaColors.Background,
@@ -66,7 +69,15 @@ fun HomeScreen(
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
             item { HomeHeader() }
-            item { HomeHero(balance = PaisaRepository.balance, leftToSpend = leftToSpend, cap = cap, spent = monthSpent) }
+            item {
+                HomeHero(
+                    balance = PaisaRepository.balance,
+                    hasBudget = hasBudget,
+                    leftToSpend = leftToSpend,
+                    cap = cap,
+                    spent = monthSpent,
+                )
+            }
             item {
                 Row(
                     modifier = Modifier
@@ -82,28 +93,41 @@ fun HomeScreen(
                         color = PaisaColors.OnSurface,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        "See All",
-                        color = PaisaColors.Primary,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable { onSeeAllTransactions() }
-                    )
+                    if (txs.isNotEmpty()) {
+                        Text(
+                            "See All",
+                            color = PaisaColors.Primary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onSeeAllTransactions() }
+                        )
+                    }
                 }
             }
-            items(txs.take(5)) { tx ->
-                TransactionRow(tx)
-                Spacer(Modifier.height(8.dp))
+            if (txs.isEmpty()) {
+                item {
+                    EmptyState(
+                        icon = Icons.Filled.Receipt,
+                        title = "No transactions yet",
+                        subtitle = "Add one manually, or grant notification access so bank alerts get logged automatically.",
+                    )
+                }
+            } else {
+                items(txs.take(5)) { tx ->
+                    TransactionRow(tx)
+                    Spacer(Modifier.height(8.dp))
+                }
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    MonthGlanceCard(txs = txs, credit = monthCredit, debit = monthSpent)
+                }
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    TopCategoryCard(txs = txs, monthlyLimit = budget.spendingCap.takeIf { it > 0 } ?: 0.0)
+                    Spacer(Modifier.height(24.dp))
+                }
             }
-            item {
-                Spacer(Modifier.height(16.dp))
-                MonthGlanceCard(credit = monthCredit, debit = monthSpent)
-            }
-            item {
-                Spacer(Modifier.height(16.dp))
-                TopCategoryCard(txs = txs, monthlyLimit = 12_000.0)
-                Spacer(Modifier.height(24.dp))
-            }
+            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 }
@@ -144,7 +168,7 @@ private fun HomeHeader() {
 }
 
 @Composable
-private fun HomeHero(balance: Double, leftToSpend: Double, cap: Double, spent: Double) {
+private fun HomeHero(balance: Double, hasBudget: Boolean, leftToSpend: Double, cap: Double, spent: Double) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,51 +186,53 @@ private fun HomeHero(balance: Double, leftToSpend: Double, cap: Double, spent: D
             color = PaisaColors.OnPrimary,
             style = PaisaTextStyles.BalanceHero
         )
-        Spacer(Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                "LEFT TO SPEND",
-                color = PaisaColors.OnPrimary.copy(alpha = 0.7f),
-                style = MaterialTheme.typography.labelLarge
-            )
-            Text(
-                formatRupees(leftToSpend, withDecimals = false),
-                color = PaisaColors.OnPrimary,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        val pct = if (cap > 0) (spent / cap).coerceIn(0.0, 1.0).toFloat() else 0f
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .background(androidx.compose.ui.graphics.Color(0xFF22C55E), RoundedCornerShape(999.dp))
-        ) {
+        if (hasBudget) {
+            Spacer(Modifier.height(24.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    "LEFT TO SPEND",
+                    color = PaisaColors.OnPrimary.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    formatRupees(leftToSpend, withDecimals = false),
+                    color = PaisaColors.OnPrimary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            val pct = (spent / cap).coerceIn(0.0, 1.0).toFloat()
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(pct)
+                    .fillMaxWidth()
                     .height(12.dp)
-                    .background(androidx.compose.ui.graphics.Color(0xFFEF4444), RoundedCornerShape(999.dp))
-            )
-        }
-        Spacer(Modifier.height(6.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "${formatRupees(spent, withDecimals = false)} of ${formatRupees(cap, withDecimals = false)} spent",
-                color = PaisaColors.OnPrimary.copy(alpha = 0.6f),
-                style = MaterialTheme.typography.labelSmall
-            )
-            Text("Remaining", color = PaisaColors.OnPrimary, style = MaterialTheme.typography.labelSmall)
+                    .background(androidx.compose.ui.graphics.Color(0xFF22C55E), RoundedCornerShape(999.dp))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(pct)
+                        .height(12.dp)
+                        .background(androidx.compose.ui.graphics.Color(0xFFEF4444), RoundedCornerShape(999.dp))
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "${formatRupees(spent, withDecimals = false)} of ${formatRupees(cap, withDecimals = false)} spent",
+                    color = PaisaColors.OnPrimary.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Text("Remaining", color = PaisaColors.OnPrimary, style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
@@ -258,7 +284,25 @@ fun TransactionRow(tx: Transaction) {
 }
 
 @Composable
-private fun MonthGlanceCard(credit: Double, debit: Double) {
+private fun MonthGlanceCard(txs: List<Transaction>, credit: Double, debit: Double) {
+    val cal = Calendar.getInstance()
+    val month = cal.get(Calendar.MONTH); val year = cal.get(Calendar.YEAR)
+    val today = cal.get(Calendar.DAY_OF_MONTH)
+    val daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+    val dailyDebits: List<Double> = (1..daysInMonth).map { day ->
+        txs.asSequence()
+            .filter { it.type == PaisaRepository.TYPE_DEBIT }
+            .filter {
+                val c = Calendar.getInstance().apply { time = it.date.toDate() }
+                c.get(Calendar.YEAR) == year &&
+                    c.get(Calendar.MONTH) == month &&
+                    c.get(Calendar.DAY_OF_MONTH) == day
+            }
+            .sumOf { it.amount }
+    }
+    val maxDay = dailyDebits.maxOrNull() ?: 0.0
+
     Column(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -281,18 +325,23 @@ private fun MonthGlanceCard(credit: Double, debit: Double) {
                 .fillMaxWidth()
                 .height(64.dp),
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            listOf(0.4f, 0.85f, 0.6f, 0.3f).forEachIndexed { idx, h ->
+            dailyDebits.forEachIndexed { idx, value ->
+                val day = idx + 1
+                val frac = if (maxDay > 0) (value / maxDay).toFloat() else 0f
+                val heightDp = (64f * frac).coerceAtLeast(if (value > 0) 4f else 0f).dp
+                val color = when {
+                    day == today -> PaisaColors.Primary
+                    value > 0 -> PaisaColors.SecondaryContainer
+                    else -> PaisaColors.SurfaceContainerHigh
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .height((64 * h).dp)
-                        .background(
-                            if (idx == 1) PaisaColors.Primary else PaisaColors.SecondaryContainer,
-                            RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-                        )
+                        .height(heightDp.coerceAtLeast(2.dp))
+                        .background(color, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
                 )
             }
         }
@@ -317,7 +366,7 @@ private fun TopCategoryCard(txs: List<Transaction>, monthlyLimit: Double) {
         .mapValues { it.value.sumOf { tx -> tx.amount } }
     val topEntry = spendByCategory.maxByOrNull { it.value } ?: return
     val cat = CategoryDefs.byName(topEntry.key) ?: CategoryDefs.byName("Other") ?: return
-    val pct = (topEntry.value / monthlyLimit).coerceIn(0.0, 1.0).toFloat()
+    val pct = if (monthlyLimit > 0) (topEntry.value / monthlyLimit).coerceIn(0.0, 1.0).toFloat() else 0f
 
     Column(
         modifier = Modifier

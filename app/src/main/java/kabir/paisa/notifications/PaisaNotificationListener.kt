@@ -4,8 +4,15 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import kabir.paisa.data.PaisaRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class PaisaNotificationListener : NotificationListenerService() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn ?: return
@@ -20,13 +27,22 @@ class PaisaNotificationListener : NotificationListenerService() {
         val parsed = BankNotificationParser.parse(combined) ?: return
 
         val merchant = parsed.merchantHint ?: bankNameFromPackage(pkg) ?: "Bank"
-        PaisaRepository.addTransaction(
-            amount = parsed.amount,
-            type = parsed.type,
-            category = "",            // untagged — surfaces in tagging flow
-            note = merchant,
-            source = PaisaRepository.SOURCE_AUTO,
-        )
+        scope.launch {
+            runCatching {
+                PaisaRepository.addTransaction(
+                    amount = parsed.amount,
+                    type = parsed.type,
+                    category = "",
+                    note = merchant,
+                    source = PaisaRepository.SOURCE_AUTO,
+                )
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     private fun bankNameFromPackage(pkg: String?): String? = when (pkg) {

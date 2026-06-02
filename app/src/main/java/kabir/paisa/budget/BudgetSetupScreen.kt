@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import kabir.paisa.data.FixedExpense
 import kabir.paisa.data.PaisaRepository
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
+import kotlinx.coroutines.launch
 
 @Composable
 fun BudgetSetupScreen(onDone: () -> Unit) {
@@ -62,6 +64,8 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
     var newExpenseName by remember { mutableStateOf("") }
     var newExpenseAmount by remember { mutableStateOf("") }
     var showAddRow by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val totalFixed = expenses.sumOf { it.amount }
     val salaryVal = salary.toDoubleOrNull() ?: 0.0
@@ -279,17 +283,25 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
 
             Button(
                 onClick = {
-                    PaisaRepository.updateBudget(
-                        Budget(
-                            salary = salaryVal,
-                            spendingCap = capVal,
-                            investmentTarget = investments,
-                            flexBudget = capVal,
-                            fixedExpenses = expenses.toList(),
-                        )
-                    )
-                    onDone()
+                    if (saving) return@Button
+                    saving = true
+                    scope.launch {
+                        runCatching {
+                            PaisaRepository.updateBudget(
+                                Budget(
+                                    salary = salaryVal,
+                                    spendingCap = capVal,
+                                    investmentTarget = investments,
+                                    flexBudget = capVal,
+                                    fixedExpenses = expenses.toList(),
+                                )
+                            )
+                        }
+                        saving = false
+                        onDone()
+                    }
                 },
+                enabled = !saving,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(999.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -297,7 +309,11 @@ fun BudgetSetupScreen(onDone: () -> Unit) {
                     contentColor = PaisaColors.OnPrimary
                 )
             ) {
-                Text("Confirm Budget Plan", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (saving) "Saving…" else "Confirm Budget Plan",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
                 Spacer(Modifier.size(8.dp))
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
             }

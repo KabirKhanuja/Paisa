@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +35,7 @@ import kabir.paisa.common.dayGroupKey
 import kabir.paisa.common.formatRupees
 import kabir.paisa.common.formatTime
 import kabir.paisa.common.ui.CategoryDefs
+import kabir.paisa.common.ui.EmptyState
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
@@ -102,28 +105,39 @@ fun AmountScreen(
                 }
             }
 
-            val grouped = txs.groupBy { dayGroupKey(it.date) }
-            grouped.forEach { (group, items) ->
+            if (txs.isEmpty()) {
                 item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(group, color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge)
-                        Spacer(Modifier.size(8.dp))
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(0.5.dp)
-                                .background(PaisaColors.OutlineVariant)
-                        )
-                    }
+                    Spacer(Modifier.height(24.dp))
+                    EmptyState(
+                        icon = Icons.Filled.Receipt,
+                        title = "No transactions yet",
+                        subtitle = "Tap “Add money” or “Subtract” above to log your first one.",
+                    )
                 }
-                items(items) { tx ->
-                    AmountTxRow(tx)
-                    Spacer(Modifier.height(8.dp))
+            } else {
+                val grouped = txs.groupBy { dayGroupKey(it.date) }
+                grouped.forEach { (group, items) ->
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(group, color = PaisaColors.Outline, style = MaterialTheme.typography.labelLarge)
+                            Spacer(Modifier.size(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(0.5.dp)
+                                    .background(PaisaColors.OutlineVariant)
+                            )
+                        }
+                    }
+                    items(items) { tx ->
+                        AmountTxRow(tx)
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
             }
             item { Spacer(Modifier.height(24.dp)) }

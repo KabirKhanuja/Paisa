@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import kabir.paisa.common.relativeDayLabel
 import kabir.paisa.data.PaisaRepository
 import kabir.paisa.data.Transaction
 import kabir.paisa.ui.theme.PaisaColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun TaggingScreen(onBack: () -> Unit) {
@@ -47,6 +49,7 @@ fun TaggingScreen(onBack: () -> Unit) {
     val untagged = txs.filter { it.category.isBlank() && it.type == PaisaRepository.TYPE_DEBIT }
 
     var pickingFor by remember { mutableStateOf<Transaction?>(null) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = PaisaColors.Background) { padding ->
         LazyColumn(
@@ -139,7 +142,7 @@ fun TaggingScreen(onBack: () -> Unit) {
     pickingFor?.let { tx ->
         CategoryPickerSheet(
             onPick = { cat ->
-                PaisaRepository.tagTransaction(tx.id, cat.name)
+                scope.launch { PaisaRepository.tagTransaction(tx.id, cat.name) }
                 pickingFor = null
             },
             onDismiss = { pickingFor = null }

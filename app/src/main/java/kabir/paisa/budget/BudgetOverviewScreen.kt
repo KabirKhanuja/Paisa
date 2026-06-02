@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.formatRupees
+import kabir.paisa.common.ui.EmptyState
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.common.ui.iconForName
@@ -53,6 +55,7 @@ fun BudgetOverviewScreen(
     val budget by PaisaRepository.budget.collectAsStateWithLifecycle()
     val txs by PaisaRepository.transactions.collectAsStateWithLifecycle()
 
+    val hasBudget = budget.salary > 0 || budget.spendingCap > 0 || budget.fixedExpenses.isNotEmpty()
     val investments = budget.investmentTarget
     val fixed = budget.fixedExpenses.sumOf { it.amount }
     val flex = budget.flexBudget.takeIf { it > 0 } ?: budget.spendingCap
@@ -87,6 +90,17 @@ fun BudgetOverviewScreen(
                         Icon(Icons.Filled.MoreVert, null, tint = PaisaColors.OnPrimary)
                     }
                 }
+            }
+            if (!hasBudget) {
+                item {
+                    Spacer(Modifier.height(24.dp))
+                    EmptyState(
+                        icon = Icons.Filled.Savings,
+                        title = "No budget set up",
+                        subtitle = "Enter your salary, fixed expenses and spending cap to start tracking. Every rupee gets a job.",
+                    )
+                }
+                return@LazyColumn
             }
             item {
                 Row(

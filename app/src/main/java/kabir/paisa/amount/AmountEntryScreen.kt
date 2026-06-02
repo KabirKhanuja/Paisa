@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import kabir.paisa.common.ui.CategoryDef
 import kabir.paisa.data.PaisaRepository
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
+import kotlinx.coroutines.launch
 
 @Composable
 fun AmountEntryScreen(
@@ -57,6 +59,9 @@ fun AmountEntryScreen(
     var description by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CategoryDef?>(null) }
     var showCategoryPicker by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     fun append(ch: String) {
         amount = when {
@@ -214,20 +219,38 @@ fun AmountEntryScreen(
 
             Spacer(Modifier.height(24.dp))
 
+            if (error != null) {
+                Text(
+                    error!!,
+                    color = PaisaColors.Error,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
             Button(
                 onClick = {
                     val parsed = amount.toDoubleOrNull() ?: 0.0
-                    if (parsed > 0) {
-                        PaisaRepository.addTransaction(
-                            amount = parsed,
-                            type = if (isAdd) PaisaRepository.TYPE_CREDIT else PaisaRepository.TYPE_DEBIT,
-                            category = selectedCategory?.name ?: "",
-                            note = description.ifBlank { if (isAdd) "Added" else "Spent" },
-                            source = PaisaRepository.SOURCE_MANUAL,
-                        )
-                        onConfirmed()
+                    if (parsed <= 0 || saving) return@Button
+                    saving = true
+                    error = null
+                    scope.launch {
+                        runCatching {
+                            PaisaRepository.addTransaction(
+                                amount = parsed,
+                                type = if (isAdd) PaisaRepository.TYPE_CREDIT else PaisaRepository.TYPE_DEBIT,
+                                category = selectedCategory?.name ?: "",
+                                note = description.ifBlank { if (isAdd) "Added" else "Spent" },
+                                source = PaisaRepository.SOURCE_MANUAL,
+                            )
+                        }.onSuccess {
+                            onConfirmed()
+                        }.onFailure {
+                            error = it.message ?: "Couldn't save transaction"
+                            saving = false
+                        }
                     }
                 },
+                enabled = !saving,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -235,7 +258,11 @@ fun AmountEntryScreen(
                     contentColor = PaisaColors.OnPrimary
                 )
             ) {
-                Text("Confirm Transaction", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (saving) "Saving…" else "Confirm Transaction",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
             Spacer(Modifier.height(24.dp))
         }
