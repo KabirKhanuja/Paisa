@@ -9,6 +9,10 @@ import java.util.Locale
 private val timeOnly = SimpleDateFormat("hh:mm a", Locale.getDefault())
 private val dayMonth = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
 private val dayHeader = SimpleDateFormat("EEEE, d MMM", Locale.getDefault())
+private val isoDayKey = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+/** Stable group key for a given timestamp, in the same `yyyy-MM-dd` format used by Firestore. */
+fun dayKey(ts: Timestamp): String = isoDayKey.format(ts.toDate())
 
 fun Timestamp.asDate(): Date = toDate()
 

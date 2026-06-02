@@ -27,10 +27,12 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.SyncAlt
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,10 +40,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,18 +57,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kabir.paisa.common.ui.NavTab
 import kabir.paisa.common.ui.PaisaBottomNav
 import kabir.paisa.data.AuthRepository
+import kabir.paisa.data.PaisaRepository
 import kabir.paisa.ui.theme.PaisaColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
     onSignedOut: () -> Unit,
+    onDataCleared: () -> Unit,
     onTab: (NavTab) -> Unit,
 ) {
     val ctx = LocalContext.current
     val email by AuthRepository.userEmail.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     var notificationsOn by remember { mutableStateOf(isListenerEnabled(ctx)) }
     var darkMode by remember { mutableStateOf(false) }
+    var showClearAll by remember { mutableStateOf(false) }
+    var clearing by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = PaisaColors.Background,
@@ -75,7 +85,6 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             item {
                 Column(
@@ -154,6 +163,40 @@ fun SettingsScreen(
                 }
             }
 
+            item { Spacer(Modifier.height(16.dp)) }
+
+            item {
+                Section(title = "DANGER ZONE") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !clearing) { showClearAll = true }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.DeleteForever, null, tint = PaisaColors.Tertiary)
+                            Spacer(Modifier.size(16.dp))
+                            Column {
+                                Text(
+                                    if (clearing) "Clearing…" else "Clear all data",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = PaisaColors.Tertiary,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    "Wipe transactions, snapshots and reports",
+                                    color = PaisaColors.Outline,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = PaisaColors.OutlineVariant)
+                    }
+                }
+            }
+
             item { Spacer(Modifier.height(24.dp)) }
 
             item {
@@ -178,6 +221,44 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(24.dp)) }
         }
     }
+
+    if (showClearAll) {
+        ClearAllDataDialog(
+            onConfirm = {
+                showClearAll = false
+                clearing = true
+                scope.launch {
+                    runCatching { PaisaRepository.clearAllData() }
+                        .onSuccess { onDataCleared() }
+                    clearing = false
+                }
+            },
+            onDismiss = { showClearAll = false },
+        )
+    }
+}
+
+@Composable
+private fun ClearAllDataDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Clear all data?") },
+        text = {
+            Text("This will permanently delete all your transactions, snapshots and reports. This cannot be undone.")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Clear everything", color = PaisaColors.Tertiary, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+        containerColor = PaisaColors.SurfaceContainerLowest,
+    )
 }
 
 @Composable

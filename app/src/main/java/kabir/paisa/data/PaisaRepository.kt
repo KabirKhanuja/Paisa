@@ -87,9 +87,8 @@ object PaisaRepository {
     }
 
     /**
-     * Persist a new transaction to Firestore, await the write, then update
-     * that day's [DailySnapshot] doc. Local [transactions] is updated only
-     * after Firestore acknowledges.
+     * Persist a new transaction to Firestore, await the write, then recompute
+     * that day's [DailySnapshot] doc.
      */
     suspend fun addTransaction(
         amount: Double,
@@ -117,7 +116,7 @@ object PaisaRepository {
 
         userDoc.collection("transactions").document(tx.id).set(tx).await()
         _transactions.value = (listOf(tx) + _transactions.value).sortedByDescending { it.date.seconds }
-        updateDailySnapshot(userDoc, tx)
+        recomputeDailySnapshot(userDoc, tx.date.toDate(), includeTx = tx)
         return tx
     }
 
@@ -148,9 +147,76 @@ object PaisaRepository {
     }
 
     /**
-     * One-shot reload of transactions and budget from Firestore. Snapshot
-     * listeners already keep state live, but call this on analytics-screen
-     * entry to guarantee fresh data on tab switch.
+     * Delete one transaction. Recomputes that day's snapshot from the remaining
+     * transactions, then re-fetches the full list and balance from Firestore.
+     */
+    suspend fun deleteTransaction(transactionId: String) {
+        val userDoc = firestoreUserDoc()
+            ?: error("Cannot delete transaction: no signed-in user.")
+
+        // Resolve the transaction so we know which day's snapshot to recompute.
+        val cached = _transactions.value.firstOrNull { it.id == transactionId }
+        val tx = cached ?: userDoc.collection("transactions").document(transactionId)
+            .get().await().toObject(Transaction::class.java)?.copy(id = transactionId)
+
+        userDoc.collection("transactions").document(transactionId).delete().await()
+
+        if (tx != null) {
+            recomputeDailySnapshot(userDoc, tx.date.toDate())
+        }
+        refreshAnalytics()
+    }
+
+    /**
+     * Delete every transaction on the given calendar day, then delete its
+     * snapshot doc. Date string is `yyyy-MM-dd`.
+     */
+    suspend fun deleteTransactionsByDate(dateString: String) {
+        val userDoc = firestoreUserDoc()
+            ?: error("Cannot delete: no signed-in user.")
+        val date = dayKeyFmt.parse(dateString)
+            ?: error("Invalid date: $dateString (expected yyyy-MM-dd)")
+        val (start, end) = dayBounds(date)
+
+        val docs = userDoc.collection("transactions")
+            .whereGreaterThanOrEqualTo("date", Timestamp(start))
+            .whereLessThan("date", Timestamp(end))
+            .get().await()
+
+        val batch = FirebaseFirestore.getInstance().batch()
+        docs.forEach { batch.delete(it.reference) }
+        batch.commit().await()
+
+        userDoc.collection("dailySnapshots").document(dateString).delete().await()
+        refreshAnalytics()
+    }
+
+    /**
+     * Wipe every transaction, daily snapshot and monthly report under this
+     * user, and reset startingBalance to 0.
+     */
+    suspend fun clearAllData() {
+        val userDoc = firestoreUserDoc()
+            ?: error("Cannot clear data: no signed-in user.")
+        val db = FirebaseFirestore.getInstance()
+        val batch = db.batch()
+
+        userDoc.collection("transactions").get().await()
+            .forEach { batch.delete(it.reference) }
+        userDoc.collection("dailySnapshots").get().await()
+            .forEach { batch.delete(it.reference) }
+        userDoc.collection("monthlyReports").get().await()
+            .forEach { batch.delete(it.reference) }
+        batch.commit().await()
+
+        userDoc.update("startingBalance", 0.0).await()
+        refreshAnalytics()
+    }
+
+    /**
+     * One-shot reload of transactions, budget and starting balance from
+     * Firestore. Snapshot listeners already keep state live, but call this
+     * after a destructive op to guarantee fresh totals.
      */
     suspend fun refreshAnalytics() {
         val userDoc = firestoreUserDoc() ?: return
@@ -163,7 +229,8 @@ object PaisaRepository {
         val budgetSnap = userDoc.collection("budget").document(currentMonthKey()).get().await()
         _budget.value = budgetSnap.takeIf { it.exists() }
             ?.toObject(Budget::class.java) ?: Budget()
-        userDoc.get().await().getDouble("startingBalance")?.let { _startingBalance.value = it }
+        val userSnap = userDoc.get().await()
+        _startingBalance.value = userSnap.getDouble("startingBalance") ?: 0.0
     }
 
     fun untaggedDebits(): List<Transaction> =
@@ -178,34 +245,62 @@ object PaisaRepository {
 
     // ----- daily snapshots -----
 
-    private suspend fun updateDailySnapshot(userDoc: DocumentReference, newTx: Transaction) {
-        val dayKey = dayKeyFmt.format(newTx.date.toDate())
-        val (dayStart, dayEnd) = dayBounds(newTx.date.toDate())
+    /**
+     * Compute the snapshot for [dayDate] from scratch by querying Firestore.
+     * Pass [includeTx] when called immediately after a write whose server
+     * round-trip may not yet reflect in subsequent queries. If the day ends
+     * up with zero transactions, the snapshot doc is deleted instead.
+     *
+     * `closingBalance` is computed as `startingBalance + signed_sum(all txs <= dayEnd)`
+     * — meaning it doesn't depend on any individual tx's stale `balanceAfter`.
+     */
+    private suspend fun recomputeDailySnapshot(
+        userDoc: DocumentReference,
+        dayDate: Date,
+        includeTx: Transaction? = null,
+    ) {
+        val dayKey = dayKeyFmt.format(dayDate)
+        val (dayStart, dayEnd) = dayBounds(dayDate)
 
-        val querySnap = userDoc.collection("transactions")
+        val dayQuery = userDoc.collection("transactions")
             .whereGreaterThanOrEqualTo("date", Timestamp(dayStart))
             .whereLessThanOrEqualTo("date", Timestamp(dayEnd))
             .get().await()
-        val fromServer = querySnap.documents.mapNotNull { doc ->
+        val fromServer = dayQuery.documents.mapNotNull { doc ->
             doc.toObject(Transaction::class.java)?.copy(id = doc.id)
         }
-        val all = (fromServer + newTx).distinctBy { it.id }
+        val all = if (includeTx != null) (fromServer + includeTx).distinctBy { it.id } else fromServer
+
+        val snapshotsRef = userDoc.collection("dailySnapshots").document(dayKey)
+        if (all.isEmpty()) {
+            snapshotsRef.delete().await()
+            return
+        }
+
+        // Opening balance = startingBalance + signed sum of all txs strictly before this day.
+        val priorQuery = userDoc.collection("transactions")
+            .whereLessThan("date", Timestamp(dayStart))
+            .get().await()
+        val priorSignedSum = priorQuery.documents.mapNotNull { doc ->
+            doc.toObject(Transaction::class.java)
+        }.sumOf { signFor(it.type) * it.amount }
+        val openingBalance = _startingBalance.value + priorSignedSum
 
         val totalCredit = all.filter { it.type == TYPE_CREDIT }.sumOf { it.amount }
         val totalDebit = all.filter { it.type == TYPE_DEBIT }.sumOf { it.amount }
-        val closingBalance = all.maxByOrNull { it.date.seconds }?.balanceAfter ?: balance
-        val signedDelta = all.sumOf { it.signedAmount }
-        val openingBalance = closingBalance - signedDelta
+        val signedDelta = all.sumOf { signFor(it.type) * it.amount }
+        val closingBalance = openingBalance + signedDelta
 
-        val snapshot = DailySnapshot(
-            date = dayKey,
-            openingBalance = openingBalance,
-            closingBalance = closingBalance,
-            totalCredit = totalCredit,
-            totalDebit = totalDebit,
-            transactionCount = all.size,
-        )
-        userDoc.collection("dailySnapshots").document(dayKey).set(snapshot).await()
+        snapshotsRef.set(
+            DailySnapshot(
+                date = dayKey,
+                openingBalance = openingBalance,
+                closingBalance = closingBalance,
+                totalCredit = totalCredit,
+                totalDebit = totalDebit,
+                transactionCount = all.size,
+            )
+        ).await()
     }
 
     private fun dayBounds(date: Date): Pair<Date, Date> {
