@@ -25,13 +25,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +55,12 @@ import kabir.paisa.data.PaisaRepository
 import kabir.paisa.ui.theme.PaisaColors
 import kabir.paisa.ui.theme.PaisaTextStyles
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AmountEntryScreen(
     initialIsAdd: Boolean,
@@ -61,6 +72,10 @@ fun AmountEntryScreen(
     var description by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CategoryDef?>(null) }
     var showCategoryPicker by remember { mutableStateOf(false) }
+    // Stored as the DatePicker's "UTC midnight" millis convention; converted
+    // to an IST-midnight Firestore Timestamp at submit time.
+    var selectedDateMillis by remember { mutableStateOf(todayPickerMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -193,6 +208,30 @@ fun AmountEntryScreen(
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = PaisaColors.Outline)
             }
 
+            Spacer(Modifier.height(12.dp))
+
+            // Date picker row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(0.5.dp, PaisaColors.OutlineVariant, RoundedCornerShape(12.dp))
+                    .background(PaisaColors.SurfaceContainerLowest, RoundedCornerShape(12.dp))
+                    .clickable { showDatePicker = true }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.CalendarToday, null, tint = PaisaColors.Outline)
+                    Spacer(Modifier.size(12.dp))
+                    Text(
+                        formatPickerDate(selectedDateMillis),
+                        color = PaisaColors.OnSurface,
+                    )
+                }
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = PaisaColors.Outline)
+            }
+
             Spacer(Modifier.height(24.dp))
 
             val keys = listOf("1","2","3","4","5","6","7","8","9",".","0","⌫")
@@ -245,6 +284,7 @@ fun AmountEntryScreen(
                                 category = selectedCategory?.name ?: "",
                                 note = description.ifBlank { if (isAdd) "Added" else "Spent" },
                                 source = PaisaRepository.SOURCE_MANUAL,
+                                date = pickerToISTTimestamp(selectedDateMillis),
                             )
                         }.onSuccess {
                             onConfirmed()
@@ -278,4 +318,52 @@ fun AmountEntryScreen(
             onDismiss = { showCategoryPicker = false }
         )
     }
+
+    if (showDatePicker) {
+        val pickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { selectedDateMillis = it }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            },
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+}
+
+// ----- date picker helpers -----
+
+private val IST: TimeZone = TimeZone.getTimeZone("Asia/Kolkata")
+private val UTC: TimeZone = TimeZone.getTimeZone("UTC")
+private val displayFormatter = SimpleDateFormat("d MMM yyyy", Locale.getDefault()).apply { timeZone = IST }
+
+/** UTC-midnight millis for today's IST calendar date — matches DatePicker's storage convention. */
+private fun todayPickerMillis(): Long {
+    val ist = Calendar.getInstance(IST)
+    return Calendar.getInstance(UTC).apply {
+        set(ist.get(Calendar.YEAR), ist.get(Calendar.MONTH), ist.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+}
+
+/** Reinterpret the picker's UTC-midnight millis as IST midnight of the same Y/M/D, then wrap as a Firestore Timestamp. */
+private fun pickerToISTTimestamp(pickerMillis: Long): com.google.firebase.Timestamp {
+    val utc = Calendar.getInstance(UTC).apply { timeInMillis = pickerMillis }
+    val ist = Calendar.getInstance(IST).apply {
+        set(utc.get(Calendar.YEAR), utc.get(Calendar.MONTH), utc.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return com.google.firebase.Timestamp(ist.time)
+}
+
+private fun formatPickerDate(pickerMillis: Long): String {
+    if (pickerMillis == todayPickerMillis()) return "Today"
+    return displayFormatter.format(pickerToISTTimestamp(pickerMillis).toDate())
 }
